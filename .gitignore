@@ -1,5 +1,7 @@
+.*
+!.gitignore
 DerivedData/
 *.xcodeproj
 .DS_Store
-AmericanSignLanguage_AI/info.plist
-AmericanSignLanguage_AI/*.entitlements
+info.plist
+*.entitlements

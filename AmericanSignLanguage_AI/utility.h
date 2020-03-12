@@ -43,6 +43,8 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
     openStream(file, in);
     std::future<int> _rows(std::async(countRows, std::ref(in)));
     rows = _rows.get() - 1; /// ignore the first row (titles)
+    std::cout << "file: " << std::setw(20) << std::left;
+    std::cout << file << "\t rows: " << rows << std::endl;
     Y = cv::Mat::zeros(rows, 1, CV_8U);
     X = cv::Mat::zeros(rows, NUM_FEATURE, CV_8U);
     
@@ -78,32 +80,39 @@ void displayImage(cv::Mat& image, double scale) {
     }
 }
 
-void display_nxm_random_samples_image(const cv::Mat& model, int n, int m) {
+void display_nxm_random_samples_image(const cv::Mat& model, int nHeight, int mWidth ) {
     std::vector<int> randomRowsOfModel;
     int sampleDim = sqrt(NUM_FEATURE);
     cv::RNG randomGenerator;
-    for (int i = 0; i < n*m; i++) {
+    for (int i = 0; i < (nHeight * mWidth); i++) {
         randomRowsOfModel.push_back(randomGenerator.uniform(0, model.rows));
     }
 
-    int imageRows = sampleDim * n + n - 1; /// n - 1 pixel padding between images
-    int imageCols = sampleDim * m + m - 1; /// m - 1 pixel padding between images
+    int imageRows = sampleDim * nHeight + nHeight - 1; /// n - 1 pixel padding between images
+    int imageCols = sampleDim * mWidth + mWidth - 1; /// m - 1 pixel padding between images
     cv::Mat image = cv::Mat::zeros(imageRows, imageCols, CV_8U);
-    int indexInRandomVect;
+    int indexInRandomVect = -1;
+    cv::Mat sample;
     for (int r = 0; r < imageRows; r++) {
         for (int c = 0; c < imageCols; c++) {
+            /// if it is padding, make it black
             if (r % (sampleDim+1) == 0 && r != 0) image.at<uchar>(r,c) = 0;
             else if (c % (sampleDim+1) == 0 && c != 0) image.at<uchar>(r,c) = 0;
+            /// otherwise colorize based on samples
             else {
-                int padding_row = (r/sampleDim) % sampleDim * 1;
-                int padding_col = (c/sampleDim) % sampleDim * 1;
-                int noDimRow = r/sampleDim - padding_row;
-                int noDimCol = c/sampleDim - padding_col;
-                indexInRandomVect = noDimRow * m + noDimCol;
-                std::cout << "rand ind: " << indexInRandomVect << std::endl;
-                cv::Mat sample = getImageFromModelRow(model.row(randomRowsOfModel[indexInRandomVect]));
-                int rowInSample = (r - padding_row) / m;
-                int colInSample = (c - padding_col) / n;
+                /// calculate the num of padding pixels so far
+                int padding_rows = (r+1)/(sampleDim+1);
+                int padding_cols = (c+1)/(sampleDim+1);
+                /// calculate the index of sample from 0 to (nHeight * mWidth)
+                int new_index = ((r - padding_rows)/sampleDim) * nHeight + (c - padding_cols)/sampleDim;
+                /// if index changed, find the sample image; otherwise use the sample that already have
+                if (new_index != indexInRandomVect) {
+                    indexInRandomVect = new_index;
+                    sample = getImageFromModelRow(model.row(randomRowsOfModel[indexInRandomVect]));
+                }
+                /// colorize the pixel at (r, c) similar to the pixel at (rowInSample, colInSample) of sample
+                int rowInSample = r - indexInRandomVect / nHeight * sampleDim - padding_rows;
+                int colInSample = c - (indexInRandomVect % mWidth) * sampleDim - padding_cols;
                 image.at<uchar>(r,c) = sample.at<uchar>(rowInSample, colInSample);
             }
         }

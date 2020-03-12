@@ -10,6 +10,8 @@
 #include <thread>
 
 #include "utility.h"
+#include "cost.h"
+
 
 /// each row of data includes lables and the gray scale value of the 28x28 = 784 pixels
 
@@ -34,7 +36,7 @@ int main(int argc, char* argv[]) {
     setupTest.join();
     
     
-    display_nxm_random_samples_image(test_X, 3, 3);
+    display_nxm_random_samples_image(test_X, 10, 20);
     
     
     return 0;

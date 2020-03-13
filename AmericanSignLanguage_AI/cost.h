@@ -31,7 +31,7 @@ cv::Mat sigmoid(const cv::Mat& Z) {
     return G;
 }
 
-cv::Mat sigmoidGradient(const cv::Mat& Z) {     /// replaced with a.mul(1 - a)
+cv::Mat sigmoidPrime(const cv::Mat& Z) {
     cv::Mat G = cv::Mat::zeros(Z.size(), Z.type());
     G = sigmoid(Z).mul(1 - sigmoid(Z));
     return G;
@@ -110,16 +110,16 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
         Theta_[i] = Theta[i].colRange(2, Theta[i].cols);
     }
     /// finding each error using `backpropagation`
-    /// delta4 --> delta[3] --> m x k                                                        Thetha_g3 --> (k x m) * (m x s3)
-    /// delta3 --> delta[2] --> (m x k) x ( k x s3) . (m x s3)                     Thetha_g2 --> (s3 x m) * (m x s2)
-    /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)                  Thetha_g1 --> (s2 x m) * (m x s1)
-    /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n)
-    /// delta0 --> ---------- --> (m x s1) x (s1 x n) . (m x n)                      ---> we ignore this
+    /// delta4 --> delta[3] --> m x k                                                        Thetha_g3 --> (k x m) * (m x s3+1)
+    /// delta3 --> delta[2] --> (m x k) x ( k x s3) . (m x s3)                     Thetha_g2 --> (s3 x m) * (m x s2+1)
+    /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)                  Thetha_g1 --> (s2 x m) * (m x s1+1)
+    /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n+1)
+    /// delta0 --> ---------- -->                  ---> we ignore this
     for (int i = NUM_LAYER-2; i >= 0; i--) {
         if (i == NUM_LAYER-2)
             delta[i] = (a[i+1] - Y_);
         else
-            delta[i] = ( delta[i+1] * Theta_[i+1] ).mul( a[i+1].mul(1 - a[i+1]) );
+            delta[i] = ( delta[i+1] * Theta_[i+1] ).mul( sigmoidPrime(a[i] * Theta[i].t()) );
     }
     /// feeding forward again
     for (int i = 0; i < NUM_LAYER-1; i++) {

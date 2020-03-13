@@ -10,13 +10,14 @@
 #define cost_h
 
 #include <opencv2/opencv.hpp>
-                                                        // layers length (L layers)
+                                                        // each layer length (L layers)
 const int IN_SIZE = 784;        /// same as NUM_FEATURE                 n
 const int HIDEN1_SIZE = 28;                                 //s1
 const int HIDEN2_SIZE = 37;                                 //s2
 const int HIDEN3_SIZE = 28;                                 //s3
-const int OUT_SIZE = 25;        /// same as NUM_LABLE                  //  k
+const int OUT_SIZE = 25;        /// same as NUM_LABLE                     k
 
+const int NUM_LAYER = 5;
 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
@@ -30,7 +31,7 @@ cv::Mat sigmoid(const cv::Mat& Z) {
     return G;
 }
 
-cv::Mat sigmoidGradient(const cv::Mat& Z) {
+cv::Mat sigmoidGradient(const cv::Mat& Z) {     /// replaced with a.mul(1 - a)
     cv::Mat G = cv::Mat::zeros(Z.size(), Z.type());
     G = sigmoid(Z).mul(1 - sigmoid(Z));
     return G;
@@ -52,79 +53,78 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
                   cv::Mat& gradient) {      /// gradient to return (partial derivative of cost func.)
     // NOTE: - extracting Theta from vertival vector
     /// the dimention of each Thetha is:  the next layer size x its layer size
-    cv::Range range0(0, HIDEN1_SIZE * (IN_SIZE+1));
-    cv::Mat Theta0 = params(range0, cv::Range::all());
-    Theta0.resize(HIDEN1_SIZE, IN_SIZE+1);              /// Theta0 --> s1 x (n+1)
-    
-    cv::Range range1(range0.end, range0.end + HIDEN2_SIZE * (HIDEN1_SIZE+1));
-    cv::Mat Theta1 = params(range1, cv::Range::all());
-    Theta1.resize(HIDEN2_SIZE, HIDEN1_SIZE+1);          /// Theta1 --> s2 x (s1+1)
-    
-    cv::Range range2(range1.end, range1.end + HIDEN3_SIZE * (HIDEN2_SIZE+1));
-    cv::Mat Theta2 = params(range2, cv::Range::all());
-    Theta2.resize(HIDEN3_SIZE, HIDEN2_SIZE+1);          /// Theta2 --> s3 x (s2+1)
-    
-    cv::Range range3(range2.end, range2.end + OUT_SIZE * (HIDEN3_SIZE+1));
-    cv::Mat Theta3 = params(range3, cv::Range::all());
-    Theta3.resize(OUT_SIZE, HIDEN3_SIZE+1);             /// Theta3 --> k x (s3+1)
+    /// Theta0 --> s1 x (n+1)
+    /// Theta1 --> s2 x (s1+1)
+    /// Theta2 --> s3 x (s2+1)
+    /// Theta3 --> k x (s3+1)
+    int S[] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE };
+    cv::Mat Theta[NUM_LAYER-1];
+    int rangeStart = 0, rangeEnd = 0;
+    for (int l = 0; l < NUM_LAYER-1; l++) {
+        rangeEnd += S[l+1] * (S[l]+1);
+        cv::Range range(rangeStart, rangeEnd);
+        Theta[l] = params(range, cv::Range::all());
+        Theta[l].resize(S[l+1], S[l]+1);
+        rangeStart = rangeEnd;
+    }
     
     
     // NOTE: - feeding forward and calculating activation parameters
+    /// X  --> m x n                                                                a0 --> m x (n+1)
+    /// a0 * Theta0' --> ( m x (n+1) ) * ( (n+1) x s1 )             a1 --> m x (s1+1)
+    /// a1 * Theta1' --> ( m x (s1+1) ) * ( (s1+1) x s2 )          a2 --> m x (s2+1)
+    /// a2 * Theta2' --> ( m x (s2+1) ) * ( (s2+1) x s3 )          a3 --> m x (s3+1)
+    /// a3 * Theta3' --> ( m x (s3+1) ) * ( (s3+1) x k)             a4 --> m x k
+    /// a4 is the hypothesis
     int m = X.rows;
     cv::Mat ones = cv::Mat::ones(m, 1, CV_8U);
+    cv::Mat a[NUM_LAYER];
+    for(int i = 0; i < NUM_LAYER-1; i++) {
+        a[i] = (i == 0) ? X : sigmoid(a[i-1] * Theta[i-1].t());
+        cv::hconcat(ones, a[i], a[i]);
+    }
     
-    cv::Mat a0(X);                              /// X  --> m x n
-    cv::hconcat(ones, a0, a0);                  /// a0 --> m x (n+1)
-    
-    cv::Mat a1 = sigmoid(a0 * Theta0.t());      ///( m x (n+1) ) * ( (n+1) x s1 )
-    cv::hconcat(ones, a1, a1);                  /// a1 --> m x (s1+1)
-    
-    cv::Mat a2 = sigmoid(a1 * Theta1.t());      ///( m x (s1+1) ) * ( (s1+1) x s2 )
-    cv::hconcat(ones, a2, a2);                  /// a2 --> m x (s2+1)
-    
-    cv::Mat a3 = sigmoid(a2 * Theta2.t());      ///( m x (s2+1) ) * ( (s2+1) x s3 )
-    cv::hconcat(ones, a3, a3);                  /// a3 --> m x (s3+1)
-    
-    /// this is is hypothesis
-    cv::Mat a4 = sigmoid(a3 * Theta3.t());      ///( m x (s3+1) ) * ( (s3+1) x k)  --> m x k
 
-
-    // NOTE: - changing each lable of lables to a vector of (0s and 1)
+    // NOTE: - changing each lable of lables to a vector of (0s and a 1)
     cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_8U);
     for (int i = 0; i < m; i++) {
         int columnForOne = Y.at<uchar>(i,1);
-        Y_.at<uchar>(i, columnForOne) = 1;
+        Y_.at<uchar>(i, columnForOne) = 1;  /// other columns of the row i  is zero
     }
     
     
     // NOTE: - calculating cost J
-    /// Y_.t() -->  k x m           a4  --> m x k     ----> sum over a k x k matrice
+    /// Y_.t() -->  k x m           a4  --> m x k     ----> sum over a k x k matrice which is actuly 0...0..1..0 in one dimention
     /// openCV's Mat has scalar elements of potentialy up to 4 color chanel
-    /// but here we have use Mat as matrice, so we only want the first chanel
-    cv::Scalar j = -1/m * cv::sum( Y_.t() * log(a4) + (1 - Y_.t()) * log(1 - a4) );
+    /// but here we have used Mat as matrice of numbers, and we only want the first chanel
+    cv::Scalar j = -1/m * cv::sum( Y_.t() * log(a[4]) + (1 - Y_.t()) * log(1 - a[4]) );
     J = j[0];       /// we only want the first chanel of the Mat matrice
     
     
     // NOTE: - backpropagation to calcute gradients
-    cv::Mat Theta0_ = Theta0.colRange(2, Theta0.cols);
-    cv::Mat Theta1_ = Theta1.colRange(2, Theta1.cols);
-    cv::Mat Theta2_ = Theta2.colRange(2, Theta2.cols);
-    cv::Mat Theta3_ = Theta3.colRange(2, Theta3.cols);
-    
-    cv::Mat delta4 = a4 - Y_;
-    cv::Mat delta3 = (delta4 * Theta3_).mul(sigmoidGradient(a2 * Theta2.t()));
-    cv::Mat delta2 = (delta3 * Theta2_).mul(sigmoidGradient(a1 * Theta1.t()));
-    cv::Mat delta1 = (delta2 * Theta1_).mul(sigmoidGradient(a0 * Theta0.t()));
-    
-    cv::Mat DELTA4 = delta4.t() * a3;
-    cv::Mat DELTA3 = delta3.t() * a2;
-    cv::Mat DELTA2 = delta2.t() * a1;
-    cv::Mat DELTA1 = delta1.t() * a0;
-
-    cv::Mat Theta0_g = 1/m * cv::Mat(DELTA1);
-    cv::Mat Theta1_g = 1/m * cv::Mat(DELTA2);
-    cv::Mat Theta2_g = 1/m * cv::Mat(DELTA3);
-    cv::Mat Theta3_g = 1/m * cv::Mat(DELTA4);
+    cv::Mat Theta_[NUM_LAYER-1];
+    cv::Mat delta[NUM_LAYER-1];
+    cv::Mat Theta_g[NUM_LAYER-1];
+    /// removing the first column (ons) from each of Theta
+    for (int i = 0; i < NUM_LAYER - 1; i++) {
+        Theta_[i] = Theta[i].colRange(2, Theta[i].cols);
+    }
+    /// finding each error using `backpropagation`
+    /// delta4 --> delta[3] --> m x k                                                        Thetha_g3 --> (k x m) * (m x s3)
+    /// delta3 --> delta[2] --> (m x k) x ( k x s3) . (m x s3)                     Thetha_g2 --> (s3 x m) * (m x s2)
+    /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)                  Thetha_g1 --> (s2 x m) * (m x s1)
+    /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n)
+    /// delta0 --> ---------- --> (m x s1) x (s1 x n) . (m x n)                      ---> we ignore this
+    for (int i = NUM_LAYER-2; i >= 0; i--) {
+        if (i == NUM_LAYER-2)
+            delta[i] = (a[i+1] - Y_);
+        else
+            delta[i] = ( delta[i+1] * Theta_[i+1] ).mul( a[i+1].mul(1 - a[i+1]) );
+    }
+    /// feeding forward again
+    for (int i = 0; i < NUM_LAYER-1; i++) {
+        Theta_g[i] = 1/m * delta[i].t() * a[i];
+    }
 
     
     // NOTE: - regulization of the cost to prevent overfitting

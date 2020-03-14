@@ -12,10 +12,10 @@
 #include <opencv2/opencv.hpp>
                                                         // each layer length (L layers)
 const int IN_SIZE = 784;        /// same as NUM_FEATURE                 n
-const int HIDEN1_SIZE = 28;     ///                           s1
-const int HIDEN2_SIZE = 37;     ///                           s2
-const int HIDEN3_SIZE = 28;     ///                           s3
-const int OUT_SIZE = 25;        /// same as NUM_LABLE                       k
+const int HIDEN1_SIZE = 28;     ///                                     s1
+const int HIDEN2_SIZE = 37;     ///                                     s2
+const int HIDEN3_SIZE = 28;     ///                                     s3
+const int OUT_SIZE = 25;        /// same as NUM_LABLE                   k
 
 const int NUM_LAYER = 5;
 const double epsilon = 0.15;    /// a smal double to initialize layers' weights randomly
@@ -71,7 +71,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     /// Theta0 --> s1 x (n+1)
     /// Theta1 --> s2 x (s1+1)
     /// Theta2 --> s3 x (s2+1)
-    /// Theta3 --> k x (s3+1)
+    /// Theta3 --> k  x (s3+1)
     int S[] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE };
     cv::Mat Theta[NUM_LAYER-1];
     int rangeStart = 0, rangeEnd = 0;
@@ -85,10 +85,10 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     
     
     // NOTE: - feeding forward and calculating activation parameters
-    /// X  --> m x n                                                                a0 --> m x (n+1)
-    /// a0 * Theta0' --> ( m x (n+1) ) * ( (n+1) x s1 )             a1 --> m x (s1+1)
-    /// a1 * Theta1' --> ( m x (s1+1) ) * ( (s1+1) x s2 )          a2 --> m x (s2+1)
-    /// a2 * Theta2' --> ( m x (s2+1) ) * ( (s2+1) x s3 )          a3 --> m x (s3+1)
+    /// X  --> m x n                                                a0 --> m x (n+1)
+    /// a0 * Theta0' --> ( m x (n+1) )  * ( (n+1) x s1 )            a1 --> m x (s1+1)
+    /// a1 * Theta1' --> ( m x (s1+1) ) * ( (s1+1) x s2 )           a2 --> m x (s2+1)
+    /// a2 * Theta2' --> ( m x (s2+1) ) * ( (s2+1) x s3 )           a3 --> m x (s3+1)
     /// a3 * Theta3' --> ( m x (s3+1) ) * ( (s3+1) x k)             a4 --> m x k
     /// a4 is the hypothesis
     int m = X.rows;
@@ -109,7 +109,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     
     
     // NOTE: - calculating cost J
-    /// Y_.t() -->  k x m           a4  --> m x k     ----> sum over a k x k matrice which is actuly 0...0..1..0 in one dimention
+    /// Y_.t() -->  k x m       a4  --> m x k     ----> sum over a k x k matrice which has 0...0..1..0 in one dimention
     /// openCV's Mat has scalar elements of potentialy up to 4 color chanel
     /// but here we have used Mat as matrice of numbers, and we only want the first chanel
     cv::Scalar j = -1/m * cv::sum( Y_.t() * log(a[4]) + (1 - Y_.t()) * log(1 - a[4]) );
@@ -125,11 +125,11 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
         Theta_[i] = Theta[i].colRange(1, Theta[i].cols);
     }
     /// finding each error using `backpropagation`
-    /// delta4 --> delta[3] --> m x k                                                        Thetha_g3 --> (k x m) * (m x s3+1)
-    /// delta3 --> delta[2] --> (m x k) x ( k x s3) . (m x s3)                     Thetha_g2 --> (s3 x m) * (m x s2+1)
+    /// delta4 --> delta[3] --> m x k                                            Thetha_g3 --> (k x m)  * (m x s3+1)
+    /// delta3 --> delta[2] --> (m x k)  x ( k x s3) . (m x s3)                  Thetha_g2 --> (s3 x m) * (m x s2+1)
     /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)                  Thetha_g1 --> (s2 x m) * (m x s1+1)
     /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n+1)
-    /// delta0 --> ---------- -->                  ---> we ignore this
+    /// delta0 -->  ------  -->                  ---> we ignore this
     for (int i = NUM_LAYER-2; i >= 0; i--) {
         if (i == NUM_LAYER-2)
             delta[i] = (a[i+1] - Y_);

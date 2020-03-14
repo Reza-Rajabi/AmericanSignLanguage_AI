@@ -18,6 +18,7 @@ const int HIDEN3_SIZE = 28;                                 //s3
 const int OUT_SIZE = 25;        /// same as NUM_LABLE                     k
 
 const int NUM_LAYER = 5;
+const double epsilon = 0.15;    /// a smal double to initialize layers' weights randomly
 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
@@ -41,7 +42,18 @@ cv::Mat log(const cv::Mat& M) {
     return logM;
 }
 
-void initialParameters(cv::Mat& params) {}
+cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
+    // NOTE: - randomly initializes parameters for a layer with inConnections number of
+    ///        incomming connections and outConnections number of outcomming connections
+    ///        it returns a matrice of size (outConnections, 1 + inConnections)
+    cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_8U);
+    cv::RNG randomGenerator;
+    weights.forEach<uchar>([&](uchar& element){
+        element = randomGenerator.uniform(outConnections, 1 + inConnections) * 2 * epsilon - epsilon;
+    });
+    
+    return weights;
+}
 
 void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled up vector
                   const cv::Mat& X,         /// featurs

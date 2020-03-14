@@ -18,7 +18,8 @@ enum EXIT_CODE { ERR_ARG = 1, ERR_OPEN };
 
 const int NUM_LABLE = 25;
 const int NUM_FEATURE = 784;
-const std::string windowName = "m x n random samples";
+const std::string windowName_mxn = "m x n random samples";
+const std::string windowName_one = "sample";
 const double DISPLAY_SCALE = 2.0;
 
 void openStream(const char* file, std::ifstream& in) {
@@ -70,11 +71,10 @@ cv::Mat getImageFromModelRow(const cv::Mat& row) {
     return image;
 }
 
-void displayImage(cv::Mat& image, double scale) {
-    // DISPLAY with scale times of sample sizs
-    cv::namedWindow(windowName);
+void displayImage(cv::Mat& image, double scale, std::string windowName) {
     cv::resize(image, image, cv::Size(), scale, scale);
     // while space-bar key (ASCII 32 ) has not pressed show the image
+    cv::namedWindow(windowName);
     while(cv::waitKey(33) != 32) {
         cv::imshow(windowName, image);
     }
@@ -118,8 +118,8 @@ void display_nxm_random_samples_image(const cv::Mat& model, int nHeight, int mWi
         }
     }
     
-    // DISPLAY with scale times of sample sizs
-    displayImage(image, DISPLAY_SCALE);
+    // scale and DISPLAY image
+    displayImage(image, DISPLAY_SCALE, windowName_mxn);
 }
 
 

@@ -32,9 +32,7 @@ cv::Mat sigmoid(const cv::Mat& Z) {
 }
 
 cv::Mat sigmoidPrime(const cv::Mat& Z) {
-    cv::Mat G = cv::Mat::zeros(Z.size(), Z.type());
-    G = sigmoid(Z).mul(1 - sigmoid(Z));
-    return G;
+    return sigmoid(Z).mul(1 - sigmoid(Z));
 }
 
 cv::Mat log(const cv::Mat& M) {
@@ -107,7 +105,7 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
     cv::Mat Theta_g[NUM_LAYER-1];
     /// removing the first column (ons) from each of Theta
     for (int i = 0; i < NUM_LAYER - 1; i++) {
-        Theta_[i] = Theta[i].colRange(2, Theta[i].cols);
+        Theta_[i] = Theta[i].colRange(1, Theta[i].cols);
     }
     /// finding each error using `backpropagation`
     /// delta4 --> delta[3] --> m x k                                                        Thetha_g3 --> (k x m) * (m x s3+1)
@@ -128,10 +126,23 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
 
     
     // NOTE: - regulization of the cost to prevent overfitting
+    for (int i = 0; i < NUM_LAYER-1; i++) {
+        j += cv::sum( Theta_[i].mul(Theta_[i]) );
+        Theta_g[i] += lambda/m * Theta[i];
+    }
+    J = lambda/(2 * m) * j[0];
 
+    
     // NOTE: - unroll gradients
-
-        
+    gradient = cv::Mat::zeros(1, 1, CV_8U);         /// one extra zero here
+    for (int i = 0; i < NUM_LAYER-1; i++) {
+        Theta_g[i].resize(Theta_g[i].rows + Theta_g[i].cols , 1);
+        cv::vconcat(Theta_g[i], gradient, gradient);
+    }
+    gradient = gradient.rowRange(1, gradient.rows); /// removing the extra zero here
+     
+    
+    // NOTE: Done. J and gradient has been set up
 }
 
 

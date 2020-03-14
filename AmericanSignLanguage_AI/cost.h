@@ -23,12 +23,10 @@ const double epsilon = 0.15;    /// a smal double to initialize layers' weights 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
     cv::Mat G(Z);  /// copy
-    for(int r = 0; r < Z.rows; r++) {
-        for(int c = 0; c < Z.cols; c++) {
-            double z = Z.at<uchar>(r,c);
-            G.at<uchar>(r,c) = 1.0 / (1.0 + exp(-z));
-        }
-    }
+    Z.forEach<uchar>([&](uchar& element) {
+        element = 1.0 / (1.0 + exp(-element));
+    });
+    
     return G;
 }
 
@@ -48,7 +46,7 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     ///        it returns a matrice of size (outConnections, 1 + inConnections)
     cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_8U);
     cv::RNG randomGenerator;
-    weights.forEach<uchar>([&](uchar& element){
+    weights.forEach<uchar>([&](uchar& element) {
         element = randomGenerator.uniform(outConnections, 1 + inConnections) * 2 * epsilon - epsilon;
     });
     

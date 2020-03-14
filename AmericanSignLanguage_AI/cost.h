@@ -12,10 +12,10 @@
 #include <opencv2/opencv.hpp>
                                                         // each layer length (L layers)
 const int IN_SIZE = 784;        /// same as NUM_FEATURE                 n
-const int HIDEN1_SIZE = 28;                                 //s1
-const int HIDEN2_SIZE = 37;                                 //s2
-const int HIDEN3_SIZE = 28;                                 //s3
-const int OUT_SIZE = 25;        /// same as NUM_LABLE                     k
+const int HIDEN1_SIZE = 28;     ///                           s1
+const int HIDEN2_SIZE = 37;     ///                           s2
+const int HIDEN3_SIZE = 28;     ///                           s3
+const int OUT_SIZE = 25;        /// same as NUM_LABLE                       k
 
 const int NUM_LAYER = 5;
 const double epsilon = 0.15;    /// a smal double to initialize layers' weights randomly
@@ -23,15 +23,20 @@ const double epsilon = 0.15;    /// a smal double to initialize layers' weights 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
     cv::Mat G(Z);  /// copy
-    Z.forEach<uchar>([&](uchar& element) {
-        element = 1.0 / (1.0 + exp(-element));
-    });
+    double z;
+    for(int r = 0; r < Z.rows; r++) {
+        for (int c = 0; c < Z.cols; c++) {
+            z = G.at<double>(r,c);
+            G.at<double>(r,c) = 1.0 / (1.0 + exp(-z));
+        }
+    }
     
     return G;
 }
 
 cv::Mat sigmoidPrime(const cv::Mat& Z) {
-    return sigmoid(Z).mul(1 - sigmoid(Z));
+    cv::Mat G = sigmoid(Z);
+    return G.mul(1 - G);
 }
 
 cv::Mat log(const cv::Mat& M) {
@@ -44,16 +49,18 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     // NOTE: - randomly initializes parameters for a layer with inConnections number of
     ///        incomming connections and outConnections number of outcomming connections
     ///        it returns a matrice of size (outConnections, 1 + inConnections)
-    cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_8U);
+    cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_64F);
     cv::RNG randomGenerator;
-    weights.forEach<uchar>([&](uchar& element) {
-        element = randomGenerator.uniform(outConnections, 1 + inConnections) * 2 * epsilon - epsilon;
-    });
+    for(int r = 0; r < outConnections; r++) {
+        for (int c = 0; c < 1+inConnections; c++) {
+            weights.at<double>(r,c) = randomGenerator.uniform(outConnections, 1+inConnections) * 2 * epsilon - epsilon;
+        }
+    }
     
     return weights;
 }
 
-void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled up vector
+void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
                   long double lambda,       /// regulaization parameter
@@ -85,7 +92,7 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
     /// a3 * Theta3' --> ( m x (s3+1) ) * ( (s3+1) x k)             a4 --> m x k
     /// a4 is the hypothesis
     int m = X.rows;
-    cv::Mat ones = cv::Mat::ones(m, 1, CV_8U);
+    cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);
     cv::Mat a[NUM_LAYER];
     for(int i = 0; i < NUM_LAYER-1; i++) {
         a[i] = (i == 0) ? X : sigmoid(a[i-1] * Theta[i-1].t());
@@ -94,10 +101,10 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
     
 
     // NOTE: - changing each lable of lables to a vector of (0s and a 1)
-    cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_8U);
+    cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
     for (int i = 0; i < m; i++) {
-        int columnForOne = Y.at<uchar>(i,1);
-        Y_.at<uchar>(i, columnForOne) = 1;  /// other columns of the row i  is zero
+        int columnForOne = Y.at<double>(i,1);
+        Y_.at<double>(i, columnForOne) = 1;  /// other columns of the row i  is zero
     }
     
     
@@ -144,7 +151,7 @@ void minimizeCost(const cv::Mat& params,    /// initial parameters in a a rolled
 
     
     // NOTE: - unroll gradients
-    gradient = cv::Mat::zeros(1, 1, CV_8U);         /// one extra zero here
+    gradient = cv::Mat::zeros(1, 1, CV_64F);         /// got one extra zero here
     for (int i = 0; i < NUM_LAYER-1; i++) {
         Theta_g[i].resize(Theta_g[i].rows + Theta_g[i].cols , 1);
         cv::vconcat(Theta_g[i], gradient, gradient);

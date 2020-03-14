@@ -46,8 +46,8 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
     rows = _rows.get() - 1; /// ignore the first row (titles)
     std::cout << "file: " << std::setw(20) << std::left;
     std::cout << file << "\t rows: " << rows << std::endl;
-    Y = cv::Mat::zeros(rows, 1, CV_8U);
-    X = cv::Mat::zeros(rows, NUM_FEATURE, CV_8U);
+    Y = cv::Mat::zeros(rows, 1, CV_64F);
+    X = cv::Mat::zeros(rows, NUM_FEATURE, CV_64F);
     
     // read rows and put data in matrix
     openStream(file, in);
@@ -58,8 +58,8 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
         std::stringstream ss(line);
         for(int c = 0; c < NUM_FEATURE+1; c++) {
             getline(ss, single, ',');
-            if (c == 0) Y.at<uchar>(r, 0) = std::atoi(single.c_str());
-            else X.at<uchar>(r,c) = std::atoi(single.c_str());
+            if (c == 0) Y.at<double>(r, 0) = std::atoi(single.c_str());
+            else X.at<double>(r,c) = std::atoi(single.c_str());
         }
     }
     in.close();
@@ -113,7 +113,7 @@ void display_nxm_random_samples_image(const cv::Mat& model, int nHeight, int mWi
                 /// colorize the pixel at (r, c) similar to the pixel at (rowInSample, colInSample) of sample
                 int rowInSample = r - indexInRandomVect / nHeight * sampleDim - padding_rows;
                 int colInSample = c - (indexInRandomVect % mWidth) * sampleDim - padding_cols;
-                image.at<uchar>(r,c) = sample.at<uchar>(rowInSample, colInSample);
+                image.at<uchar>(r,c) = (uchar) sample.at<double>(rowInSample, colInSample);
             }
         }
     }

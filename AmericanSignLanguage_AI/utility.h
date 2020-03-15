@@ -16,7 +16,6 @@
 
 enum EXIT_CODE { ERR_ARG = 1, ERR_OPEN };
 
-const int NUM_LABLE = 25;
 const int NUM_FEATURE = 784;
 const std::string windowName_mxn = "m x n random samples";
 const std::string windowName_one = "sample";

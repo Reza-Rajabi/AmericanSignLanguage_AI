@@ -11,6 +11,7 @@
 
 #include "utility.h"
 #include "cost.h"
+#include "train.h"
 
 
 /// each row of data includes lables and the gray scale value of the 28x28 = 784 pixels

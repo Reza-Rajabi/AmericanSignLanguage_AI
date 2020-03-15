@@ -15,10 +15,12 @@ const int IN_SIZE = 784;        /// same as NUM_FEATURE                 n
 const int HIDEN1_SIZE = 28;     ///                                     s1
 const int HIDEN2_SIZE = 37;     ///                                     s2
 const int HIDEN3_SIZE = 28;     ///                                     s3
-const int OUT_SIZE = 25;        /// same as NUM_LABLE                   k
+const int OUT_SIZE = 24;        /// same as NUM_LABLE                   k
+
+const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.
 
 const int NUM_LAYER = 5;
-const double epsilon = 0.15;    /// a smal double to initialize layers' weights randomly
+const double epsilon = 0.15;    /// a small double to initialize layers' weights randomly
 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
@@ -63,8 +65,8 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
 void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
-                  long double lambda,       /// regulaization parameter
-                  long double& J,           /// cost to return
+                  double lambda,            /// regulaization parameter
+                  double& J,                /// cost to return
                   cv::Mat& gradient) {      /// gradient to return (partial derivative of cost func.)
     // NOTE: - extracting Theta from vertival vector
     /// the dimention of each Thetha is:  the next layer size x its layer size
@@ -101,9 +103,12 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     
 
     // NOTE: - changing each lable of lables to a vector of (0s and a 1)
-    cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
+    cv::Mat Y_ = cv::Mat::zeros(m, OUT_SIZE, CV_64F);
     for (int i = 0; i < m; i++) {
-        int columnForOne = Y.at<double>(i,1);
+        int columnForOne = Y.at<double>(i,0);
+        /// we don't have lable 9=J in dataset, so we need to minus one from index 9 to match lables 0 to 24 in 24 cols
+        /// and we need to consider to add one later on, when we want to translate a binary row in Y_ to a lable in Y
+        if (columnForOne >= 9) --columnForOne;
         Y_.at<double>(i, columnForOne) = 1;  /// other columns of the row i  is zero
     }
     

@@ -164,7 +164,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     gradient = gradient.rowRange(1, gradient.rows); /// removing the extra zero here
      
     
-    // NOTE: Done. J and gradient has been set up
+    // NOTE: Done. J and gradient has been setup
 }
 
 

@@ -21,6 +21,10 @@ const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable
 
 const int NUM_LAYER = 5;
 const double epsilon = 0.15;    /// a small double to initialize layers' weights randomly
+const double lambda = 1;        /// the regulization factor value to prevent overfitting
+
+const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size
+
 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
@@ -62,6 +66,30 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     return weights;
 }
 
+void unrollTheta(cv::Mat unrolled[], const cv::Mat& rolled) {
+    /// the dimention of each Thetha is:  the next layer size x its layer size
+     /// Theta0 --> s1 x (n+1)
+     /// Theta1 --> s2 x (s1+1)
+     /// Theta2 --> s3 x (s2+1)
+     /// Theta3 --> k  x (s3+1)
+     int rangeStart = 0, rangeEnd = 0;
+     for (int l = 0; l < NUM_LAYER-1; l++) {
+         rangeEnd += S[l+1] * (S[l]+1);
+         cv::Range range(rangeStart, rangeEnd);
+         unrolled[l] = rolled(range, cv::Range::all());
+         unrolled[l].resize(S[l+1], S[l]+1);
+         rangeStart = rangeEnd;
+     }
+}
+
+void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
+    for (int i = 0; i < NUM_LAYER-1; i++) {
+        unrolled[i].resize(unrolled[i].rows * unrolled[i].cols , 1);
+        cv::vconcat(unrolled[i], rolled, rolled);
+    }
+    rolled = rolled.rowRange(1, rolled.rows);     /// removing the extra zero here
+}
+
 void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
@@ -69,21 +97,8 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
                   double& J,                /// cost to return
                   cv::Mat& gradient) {      /// gradient to return (partial derivative of cost func.)
     // NOTE: - extracting Theta from vertival vector
-    /// the dimention of each Thetha is:  the next layer size x its layer size
-    /// Theta0 --> s1 x (n+1)
-    /// Theta1 --> s2 x (s1+1)
-    /// Theta2 --> s3 x (s2+1)
-    /// Theta3 --> k  x (s3+1)
-    int S[] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE };
     cv::Mat Theta[NUM_LAYER-1];
-    int rangeStart = 0, rangeEnd = 0;
-    for (int l = 0; l < NUM_LAYER-1; l++) {
-        rangeEnd += S[l+1] * (S[l]+1);
-        cv::Range range(rangeStart, rangeEnd);
-        Theta[l] = params(range, cv::Range::all());
-        Theta[l].resize(S[l+1], S[l]+1);
-        rangeStart = rangeEnd;
-    }
+    unrollTheta(Theta, params);
     
     
     // NOTE: - feeding forward and calculating activation parameters
@@ -155,13 +170,9 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     J = lambda/(2 * m) * j[0];
 
     
-    // NOTE: - unroll gradients
+    // NOTE: - roll gradients
     gradient = cv::Mat::zeros(1, 1, CV_64F);         /// got one extra zero here
-    for (int i = 0; i < NUM_LAYER-1; i++) {
-        Theta_g[i].resize(Theta_g[i].rows + Theta_g[i].cols , 1);
-        cv::vconcat(Theta_g[i], gradient, gradient);
-    }
-    gradient = gradient.rowRange(1, gradient.rows); /// removing the extra zero here
+    rollTheta(Theta_g, gradient);                    /// removing the extra zero in function
      
     
     // NOTE: Done. J and gradient has been setup

@@ -20,7 +20,6 @@ const int OUT_SIZE = 24;        /// same as NUM_LABLE                   k
 const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.
 
 const int NUM_LAYER = 5;
-const double epsilon = 0.1;    /// a small double to initialize layers' weights randomly
 const double lambda = 2.0;      /// the regulization factor value to prevent overfitting
 
 const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size
@@ -28,16 +27,9 @@ const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_S
 
 
 cv::Mat sigmoid(const cv::Mat& Z) {
-    cv::Mat G(Z);  /// copy
-    double z;
-    for(int r = 0; r < Z.rows; r++) {
-        for (int c = 0; c < Z.cols; c++) {
-            z = G.at<double>(r,c);
-            G.at<double>(r,c) = 1.0 / (1.0 + exp(-z));
-        }
-    }
-    
-    return G;
+    cv::Mat G;
+    cv::exp(Z, G);
+    return 1.0 / (1.0 + G);
 }
 
 cv::Mat sigmoidPrime(const cv::Mat& Z) {
@@ -55,6 +47,7 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     // NOTE: - randomly initializes parameters for a layer with inConnections number of
     ///        incomming connections and outConnections number of outcomming connections
     ///        it returns a matrice of size (outConnections, 1 + inConnections)
+    double epsilon = sqrt(6)/(outConnections+inConnections+1);
     cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_64F);
     cv::RNG randomGenerator;
     for(int r = 0; r < outConnections; r++) {
@@ -83,16 +76,12 @@ void unrollTheta(cv::Mat unrolled[], const cv::Mat& rolled) {
 }
 
 void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
-    int rows = 0;
-    for (int i = 0; i < NUM_LAYER-1; i++) {
-        rows += unrolled[i].rows;
-    }
-    rolled = cv::Mat(rows, 1, CV_64F);
-    
+    rolled = cv::Mat::zeros(1, 1, CV_64F);   /// got one extra zero here
     for (int i = 0; i < NUM_LAYER-1; i++) {
         cv::Mat temp = cv::Mat(unrolled[i].rows * unrolled[i].cols , 1, CV_64F, unrolled[i].data);
-        cv::vconcat(temp, rolled, rolled);
+        cv::vconcat(rolled, temp, rolled);
     }
+    rolled = rolled.rowRange(1, rolled.rows); /// removed the extra zero here
 }
 
 void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
@@ -161,13 +150,13 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
         else
             delta[i] = ( delta[i+1] * Theta_[i+1] ).mul( sigmoidPrime(a[i] * Theta[i].t()) );
     }
-    /// feeding forward again
+    /// feeding forward again to calculate Theta gredient
     for (int i = 0; i < NUM_LAYER-1; i++) {
         Theta_g[i] = 1/m * delta[i].t() * a[i];
     }
 
     
-    // NOTE: - regulization of the cost to prevent overfitting
+    // NOTE: - regulization of the cost and Theta_g to prevent overfitting
     for (int i = 0; i < NUM_LAYER-1; i++) {
         j += cv::sum( Theta_[i].mul(Theta_[i]) );
         Theta_g[i] += lambda/m * Theta[i];
@@ -179,7 +168,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     rollTheta(Theta_g, gradient);
      
     
-    // NOTE: Done. J and gradient has been setup
+    // NOTE: Done. J and gradient has been calculated
 }
 
 

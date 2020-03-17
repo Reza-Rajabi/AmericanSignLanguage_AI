@@ -5,3 +5,5 @@ DerivedData/
 .DS_Store
 info.plist
 *.entitlements
+jHistory.csv
+*.xlsx

@@ -76,18 +76,23 @@ void unrollTheta(cv::Mat unrolled[], const cv::Mat& rolled) {
      for (int l = 0; l < NUM_LAYER-1; l++) {
          rangeEnd += S[l+1] * (S[l]+1);
          cv::Range range(rangeStart, rangeEnd);
-         unrolled[l] = rolled(range, cv::Range::all());
-         unrolled[l].resize(S[l+1], S[l]+1);
+         cv::Mat temp = rolled(range, cv::Range::all());
+         unrolled[l] = cv::Mat(S[l+1], S[l]+1, CV_64F, temp.data);
          rangeStart = rangeEnd;
      }
 }
 
 void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
+    int rows = 0;
     for (int i = 0; i < NUM_LAYER-1; i++) {
-        unrolled[i].resize(unrolled[i].rows * unrolled[i].cols , 1);
-        cv::vconcat(unrolled[i], rolled, rolled);
+        rows += unrolled[i].rows;
     }
-    rolled = rolled.rowRange(1, rolled.rows);     /// removing the extra zero here
+    rolled = cv::Mat(rows, 1, CV_64F);
+    
+    for (int i = 0; i < NUM_LAYER-1; i++) {
+        cv::Mat temp = cv::Mat(unrolled[i].rows * unrolled[i].cols , 1, CV_64F, unrolled[i].data);
+        cv::vconcat(temp, rolled, rolled);
+    }
 }
 
 void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
@@ -171,8 +176,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
 
     
     // NOTE: - roll gradients
-    gradient = cv::Mat::zeros(1, 1, CV_64F);         /// got one extra zero here
-    rollTheta(Theta_g, gradient);                    /// removing the extra zero in function
+    rollTheta(Theta_g, gradient);
      
     
     // NOTE: Done. J and gradient has been setup

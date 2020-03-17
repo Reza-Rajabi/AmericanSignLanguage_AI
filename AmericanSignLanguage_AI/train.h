@@ -21,7 +21,13 @@ void train(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_history) {
     cv::Mat Theta_g = Theta.clone();
     double J = 0.0;
     
+    std::cout << "Training: ";
     for (int i = 0; i < OPT_ITERATE; i++) {
+        // fancy counter
+        if (i < 10) std::cout << i << '\b';
+        else if (i < 100) std::cout << i << "\b\b";
+        else if (i < 1000) std::cout << i << "\b\b\b";
+        
         costFunction(Theta, X, Y, lambda, J, Theta_g);
         Theta -= OPT_ALPHA * Theta_g;
         J_history.at<double>(i,0) = J;

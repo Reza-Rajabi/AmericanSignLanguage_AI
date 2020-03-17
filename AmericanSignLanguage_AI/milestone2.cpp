@@ -10,7 +10,6 @@
 #include <thread>
 
 #include "utility.h"
-#include "cost.h"
 #include "train.h"
 
 
@@ -40,6 +39,17 @@ int main(int argc, char* argv[]) {
     
     
     //display_nxm_random_samples_image(test_X, 10, 20);
+    
+    // Testing train function
+    cv::Mat Theta_unroll[NUM_LAYER-1];
+    for(int i = 0; i < NUM_LAYER-1; i++) {
+        Theta_unroll[i] = initializeLayerParameters(S[i], S[i+1]);
+    }
+    cv::Mat Theta;// = cv::Mat::zeros(1, 1, CV_64F); /// rollTheta function will remove this extra zero
+    rollTheta(Theta_unroll, Theta);
+    cv::Mat J_history;
+    train(train_X, train_Y, Theta, J_history);
+    std::cout << J_history << std::endl;
     
     
     // TESTING evalFun

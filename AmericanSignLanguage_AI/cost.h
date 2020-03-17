@@ -59,7 +59,7 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     cv::RNG randomGenerator;
     for(int r = 0; r < outConnections; r++) {
         for (int c = 0; c < 1+inConnections; c++) {
-            weights.at<double>(r,c) = randomGenerator.uniform(outConnections, 1+inConnections) * 2 * epsilon - epsilon;
+            weights.at<double>(r,c) = randomGenerator.uniform((double)0.0, (double)1.0) * 2 * epsilon - epsilon;
         }
     }
     

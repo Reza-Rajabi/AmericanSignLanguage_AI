@@ -16,7 +16,7 @@
 
 enum EXIT_CODE { ERR_ARG = 1, ERR_OPEN };
 
-const int NUM_FEATURE = 784;
+const int NUM_FEATURE = 784; /// each row of data includes lables and the gray scale value of the 28x28 = 784 pixels
 const std::string windowName_mxn = "m x n random samples";
 const std::string windowName_one = "sample";
 const double DISPLAY_SCALE = 2.0;

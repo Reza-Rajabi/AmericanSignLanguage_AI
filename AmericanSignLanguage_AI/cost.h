@@ -20,7 +20,7 @@ const int OUT_SIZE = 24;        /// same as NUM_LABLE                   k
 const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.
 
 const int NUM_LAYER = 5;
-const double epsilon = 0.01;    /// a small double to initialize layers' weights randomly
+const double epsilon = 0.1;    /// a small double to initialize layers' weights randomly
 const double lambda = 2.0;      /// the regulization factor value to prevent overfitting
 
 const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size

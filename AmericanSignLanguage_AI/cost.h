@@ -47,7 +47,7 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     // NOTE: - randomly initializes parameters for a layer with inConnections number of
     ///        incomming connections and outConnections number of outcomming connections
     ///        it returns a matrice of size (outConnections, 1 + inConnections)
-    double epsilon = sqrt(6)/(outConnections+inConnections+1);
+    double epsilon = sqrt(6)/sqrt(outConnections+inConnections+1);
     cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_64F);
     cv::RNG randomGenerator;
     for(int r = 0; r < outConnections; r++) {

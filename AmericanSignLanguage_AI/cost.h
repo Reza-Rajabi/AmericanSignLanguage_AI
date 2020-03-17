@@ -116,9 +116,9 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     int m = X.rows;
     cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);
     cv::Mat a[NUM_LAYER];
-    for(int i = 0; i < NUM_LAYER-1; i++) {
+    for(int i = 0; i < NUM_LAYER; i++) {
         a[i] = (i == 0) ? X : sigmoid(a[i-1] * Theta[i-1].t());
-        cv::hconcat(ones, a[i], a[i]);
+        if(i != NUM_LAYER-1) cv::hconcat(ones, a[i], a[i]);  /// don't add ones to last a[i]
     }
     
 

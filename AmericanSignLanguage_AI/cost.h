@@ -84,7 +84,7 @@ void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
     rolled = rolled.rowRange(1, rolled.rows); /// removed the extra zero here
 }
 
-void costFunction(const cv::Mat params,     /// initial parameters in a rolled up vector
+void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
                   double lambda,            /// regulaization parameter

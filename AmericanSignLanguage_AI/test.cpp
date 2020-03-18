@@ -12,6 +12,8 @@
 #include "utility.h"
 #include "train.h"
 
+/// counter on terminal
+#define TERMINAL
 
 #define CASE1 1
 #define CASE2 3
@@ -82,6 +84,10 @@ int main(int argc, char* argv[]) {
         cv::Mat d = cv::Mat::zeros(T.rows, 1, CV_64F);
         costFunction(T, X, Y, lambda, J_plus, T_prime);
         for (int i = 0; i < T.rows; i++) {
+        #ifdef TERMINAL
+            std::cout << '\r' << "Testing Backpropagation: " << i+1 << std::flush;
+        #endif
+
             d.at<double>(i,0) = eps;
             costFunction((T + d), X, Y, lambda, J_plus, temp);
             costFunction((T - d), X, Y, lambda, J_minus, temp);

@@ -12,6 +12,9 @@
 #include <opencv2/opencv.hpp>
 #include "cost.h"
 
+/// counter on terminal
+//#define TERMINAL
+
 const int OPT_ITERATE = 100;        /// maximum iteration for optimizer (train) function
 const double OPT_ALPHA = 0.03;      /// the alpha value of the optimizer (train) function
 const double OPT_CONVERGE = 1e-9;   /// the min cost amount that would consider as gradient decent has converged
@@ -27,7 +30,12 @@ void train(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_history) {
     if (ofs.is_open()) ofs << "iter, cost" << std::endl;
     
     for (int i = 0; i < OPT_ITERATE && J > OPT_CONVERGE; i++) {
-        if ((i+1) % 10 == 0) std::cout << "Training: " << i+1 << std::endl;
+    #ifdef TERMINAL
+        std::cout << '\r' << "Training: " << i+1 << std::flush;
+    #endif
+    #ifndef TERMINAL
+        if ((i+1)%25 == 0) std::cout << "Training: " << i+1 << std::endl;
+    #endif
         
         costFunction(Theta, X, Y, lambda, J, Theta_g);
         Theta -= OPT_ALPHA * Theta_g;
@@ -36,6 +44,9 @@ void train(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_history) {
         if (ofs.is_open()) ofs << i+1 << "," << J << std::endl;
     }
     ofs.close();
+    #ifdef TERMINAL
+    std::cout << std::endl;
+    #endif
 }
 
 #endif /* train_h */

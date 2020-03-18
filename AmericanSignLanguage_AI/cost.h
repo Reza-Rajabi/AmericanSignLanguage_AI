@@ -84,7 +84,7 @@ void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
     rolled = rolled.rowRange(1, rolled.rows); /// removed the extra zero here
 }
 
-void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
+void costFunction(const cv::Mat params,     /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
                   double lambda,            /// regulaization parameter
@@ -123,18 +123,17 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     
     
     // NOTE: - calculating cost J
-    /// Y_.t() -->  k x m       a4  --> m x k     ----> sum over a k x k matrice which has 0...0..1..0 in one dimention
-    /// openCV's Mat has scalar elements of potentialy up to 4 color chanel
-    /// but here we have used Mat as matrice of numbers, and we only want the first chanel
-    cv::Scalar j = -1/m * cv::sum( Y_.t() * log(a[4]) + (1 - Y_.t()) * log(1 - a[4]) );
-    J = j[0];       /// we only want the first chanel of the Mat matrice
+    /// Y_.t() -->  k x m       a4  --> m x k
+    /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
+    J = 0;
+    J = J - 1/m * cv::sum( Y_.t() * log(a[NUM_LAYER-1]) + (1 - Y_.t()) * log(1 - a[NUM_LAYER-1]) )[0];
     
     
     // NOTE: - backpropagation to calcute gradients
     cv::Mat Theta_[NUM_LAYER-1];
     cv::Mat delta[NUM_LAYER-1];
     cv::Mat Theta_g[NUM_LAYER-1];
-    /// removing the first column (ons) from each of Theta
+    /// removing the first column (corresponding to the bias of layer) from each of Theta
     for (int i = 0; i < NUM_LAYER - 1; i++) {
         Theta_[i] = Theta[i].colRange(1, Theta[i].cols);
     }
@@ -157,11 +156,15 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
 
     
     // NOTE: - regulization of the cost and Theta_g to prevent overfitting
+    /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
+    /// needs to set the first column (correspond to the bias of the layer) of Theta to zero
     for (int i = 0; i < NUM_LAYER-1; i++) {
-        j += cv::sum( Theta_[i].mul(Theta_[i]) );
+        J += lambda/(2 * m) * cv::sum( Theta_[i].mul(Theta_[i]) )[0];
+        for (int r = 0; r < Theta[i].rows; r++) {
+            Theta[i].at<double>(r,0) = 0;
+        }
         Theta_g[i] += lambda/m * Theta[i];
     }
-    J = lambda/(2 * m) * j[0];
 
     
     // NOTE: - roll gradients

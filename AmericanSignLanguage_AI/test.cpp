@@ -13,38 +13,48 @@
 #include "train.h"
 
 
-#define CASE 1
-/// -CASE 1 : loads data, displays a sample and tests train function
-/// -CASE 2 : test sigmoid and sigmoidPrime and log
-/// -CASE 3 : test random initializer
-/// -CASE 4 : test roll and unroll functions
-/// -CASE 5 : test hconcat function of opencv
+#define CASE1 1
+#define CASE2 3
+// Each test case may have its acceptence criteria commented
+/// -CASE 0 : off two simultanous scenarios
+/// -CASE 1 : tests loading data
+/// -CASE 2 : tests displays function                                                   ---> needs CASE 1
+/// -CASE 3 : tests train function                                                         ---> needs CASE 1
+/// -CASE 4 : tests backpropagation algorithm in cost function          ---> needs CASE 1
+/// -CASE 5 : tests sigmoid and sigmoidPrime and log
+/// -CASE 6 : tests random initializer
+/// -CASE 7 : tests roll and unroll functions
+/// -CASE 8 : tests hconcat function of opencv
 
 
 int main(int argc, char* argv[]) {
-    // NOTE: -CASE 1 : loads data, displays a sample and tests train function
-    /// THIS IS A GENERAL TEST OF: loading data, calculating cost, and training
-    if (CASE == 1) {
+    int train_rows, test_rows;
+    cv::Mat train_Y, test_Y; /// LABLES
+    cv::Mat train_X, test_X; /// FEATURES
+    
+    // NOTE: -CASE 1 : test loading data
+    if (CASE1 == 1 || CASE2 == 1) {
         if (argc < 3) {
             std::cout << "Data files names are not provided." << std::endl;
             exit(ERR_ARG);
         }
-        
-        int train_rows, test_rows;
-        cv::Mat train_Y, test_Y; /// LABLES
-        cv::Mat train_X, test_X; /// FEATURES
         
         std::thread setupTrain(loadData,argv[1], std::ref(train_rows), std::ref(train_Y),std::ref(train_X));
         std::thread setupTest(loadData,argv[2], std::ref(test_rows), std::ref(test_Y),std::ref(test_X));
         
         setupTrain.join();
         setupTest.join();
+    }
         
         
+    // NOTE: -CASE 2 : tests displays function
+    if (CASE1 == 2 || CASE2 == 2) {
         display_nxm_random_samples_image(test_X, 10, 20);
+    }
         
         
-        // Testing train function
+    // NOTE: -CASE 3 : tests train function
+    if (CASE1 == 3 || CASE2 == 3) {
         cv::Mat Theta_unroll[NUM_LAYER-1];
         for(int i = 0; i < NUM_LAYER-1; i++) {
             Theta_unroll[i] = initializeLayerParameters(S[i], S[i+1]);
@@ -55,14 +65,43 @@ int main(int argc, char* argv[]) {
         train(train_X, train_Y, Theta, J_history);
         /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
     }
+        
+        
+    // NOTE: -CASE 4 : test backpropagation algorithm in cost function
+    if (CASE1 == 4 || CASE2 == 4) {
+        double eps = 1e-4, J_plus, J_minus;
+        const int ROWS = 100;
+        cv::Mat temp, T_[NUM_LAYER-1], T, T_prime;
+        cv::Mat X = train_X.rowRange(0, ROWS);
+        cv::Mat Y = train_Y.rowRange(0,ROWS);
+        for(int i = 0; i < NUM_LAYER-1; i++) {
+            T_[i] = initializeLayerParameters(S[i], S[i+1]);
+        }
+        rollTheta(T_, T);
+        cv::Mat gradApproximate = cv::Mat::zeros(T.rows, 1, CV_64F);
+        cv::Mat d = cv::Mat::zeros(T.rows, 1, CV_64F);
+        costFunction(T, X, Y, lambda, J_plus, T_prime);
+        for (int i = 0; i < T.rows; i++) {
+            d.at<double>(i,0) = eps;
+            costFunction((T + d), X, Y, lambda, J_plus, temp);
+            costFunction((T - d), X, Y, lambda, J_minus, temp);
+            gradApproximate.at<double>(i,0) = (J_plus - J_minus)/(2.0*eps);
+            d.at<double>(i,0) = 0;
+        }
+        std::cout << std::endl;
+        double diff = cv::norm(gradApproximate - T_prime)/cv::norm(gradApproximate + T_prime);
+        std::cout << diff << std::endl; /// should get very small number
+        cv::hconcat(gradApproximate, T_prime, gradApproximate);
+        std::cout << gradApproximate << std::endl; /// should get 2 almost similar columns of result
+    }
     
     
     // TESTING evalFun
     /// tested in milestone2
     
     
-    // NOTE: -CASE 2 : test sigmoid and sigmoidPrime and log
-    if (CASE == 2) {
+    // NOTE: -CASE 5 : test sigmoid and sigmoidPrime and log
+    if (CASE1 == 5 || CASE2 == 5) {
         std::vector<double> data {-1, -0.5, 0, 0.5, 1};
         cv::Mat ex(data, CV_64F);
         std::cout <<
@@ -71,8 +110,8 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // NOTE: -CASE 3 : test random initializer
-    if (CASE == 3) {
+    // NOTE: -CASE 6 : test random initializer
+    if (CASE1 == 6 || CASE2 == 6) {
         for (int i = 0; i < NUM_LAYER-1; i++) {
             cv::Mat init = initializeLayerParameters(S[i], S[i+1]);
             std::cout << init.size() << std::endl;
@@ -82,9 +121,9 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // NOTE: -CASE 4 : test roll and unroll functions
-    /// this test has a conditional embeded test
-    if (CASE == 4) {
+    // NOTE: -CASE 7 : test roll and unroll functions
+    /// this test has a conditional embeded test that needs to setup manually
+    if (CASE1 == 7 || CASE2 == 7) {
         cv::Mat unrolled[4];
         double d0[] {1,2,3,4,5,6,7,8,9};
         unrolled[0] = cv::Mat(3,3,CV_64F,d0);
@@ -109,14 +148,14 @@ int main(int argc, char* argv[]) {
         if (makeSureChanged_S) {
             unrollTheta(unrolled, rolled);
             for(int i = 0; i < 4; i++) {
-            std::cout << unrolled[i] << std::endl;
+                std::cout << unrolled[i] << std::endl;
             }
         }
     }
     
     
-    // NOTE: -CASE 5 : test hconcat function of opencv
-    if (CASE == 5) {
+    // NOTE: -CASE 8 : test hconcat function of opencv
+    if (CASE1 == 8 || CASE2 == 8) {
         double d[] {111,115,146,147,168,159};
         cv::Mat right = cv::Mat(2,3,CV_64F,d);
         cv::Mat ones = cv::Mat::ones(right.rows, 1,CV_64F);

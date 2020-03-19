@@ -20,7 +20,7 @@ const int OUT_SIZE = 24;        /// same as NUM_LABLE                   k
 const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.
 
 const int NUM_LAYER = 5;
-const double lambda = 2.0;      /// the regulization factor value to prevent overfitting
+const double lambda = 2.0;      /// the regularization factor value to prevent overfitting
 
 const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size
 
@@ -28,7 +28,7 @@ const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_S
 
 cv::Mat sigmoid(const cv::Mat& Z) {
     cv::Mat G;
-    cv::exp(Z, G);
+    cv::exp(-Z, G);
     return 1.0 / (1.0 + G);
 }
 
@@ -87,7 +87,7 @@ void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
 void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
-                  double lambda,            /// regulaization parameter
+                  double lambda,            /// regularization parameter
                   double& J,                /// cost to return
                   cv::Mat& gradient) {      /// gradient to return (partial derivative of cost func.)
     // NOTE: - extracting Theta from vertival vector
@@ -125,8 +125,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     // NOTE: - calculating cost J
     /// Y_.t() -->  k x m       a4  --> m x k
     /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
-    J = 0;
-    J = J - 1/m * cv::sum( Y_.t() * log(a[NUM_LAYER-1]) + (1 - Y_.t()) * log(1 - a[NUM_LAYER-1]) )[0];
+    J = -1/m * cv::sum( Y_.t() * log(a[NUM_LAYER-1]) + (1 - Y_.t()) * log(1 - a[NUM_LAYER-1]) )[0];
     
     
     // NOTE: - backpropagation to calcute gradients
@@ -155,9 +154,9 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     }
 
     
-    // NOTE: - regulization of the cost and Theta_g to prevent overfitting
+    // NOTE: - regularization of the cost and Theta_g to prevent overfitting
     /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
-    /// needs to set the first column (correspond to the bias of the layer) of Theta to zero
+    /// needs to set the first column (correspond to the bias of the layer) of Theta to zero (do not regularize bias)
     for (int i = 0; i < NUM_LAYER-1; i++) {
         J += lambda/(2 * m) * cv::sum( Theta_[i].mul(Theta_[i]) )[0];
         for (int r = 0; r < Theta[i].rows; r++) {

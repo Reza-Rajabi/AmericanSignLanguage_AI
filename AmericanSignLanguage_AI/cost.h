@@ -144,9 +144,9 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n+1)
     /// delta0 -->  ------  -->                  ---> we ignore this
     for (int i = NUM_LAYER-2; i >= 0; i--) {
-        if (i == NUM_LAYER-2)
+        if (i == NUM_LAYER-2)   /// delta[ i ] : 3->L5, 2->L4, 1->L3, 0->L2, and no error for L1
             delta[i] = (a[i+1] - Y_);
-        else
+        else                    /// delta[layer l] = delta[l + 1] * Theta[l] . sigmoidPrime(a[l - 1] * Theta[l - 1]
             delta[i] = ( delta[i+1] * Theta_[i+1] ).mul( sigmoidPrime(a[i] * Theta[i].t()) );
     }
     /// feeding forward again to calculate Theta gredient

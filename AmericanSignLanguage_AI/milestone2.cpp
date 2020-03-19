@@ -14,7 +14,7 @@
 
 
 
-int _main_(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     if (argc < 3) {
         std::cout << "Data files names are not provided." << std::endl;
         exit(ERR_ARG);

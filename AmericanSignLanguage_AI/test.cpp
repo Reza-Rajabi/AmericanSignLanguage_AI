@@ -11,6 +11,8 @@
 
 #include "utility.h"
 #include "train.h"
+#include "predict.h"
+
 
 /// counter on terminal
 #define TERMINAL
@@ -64,8 +66,38 @@ int main(int argc, char* argv[]) {
         cv::Mat Theta;
         rollTheta(Theta_unroll, Theta);
         cv::Mat J_history;
-        train(train_X, train_Y, Theta, J_history);
+        train_gradDescent(train_X, train_Y, Theta, J_history);
         /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
+        
+        // using second method
+        //train_conjGrad(train_X, train_Y, Theta);
+        
+        
+        cv::Mat Predict;
+        predict(test_X, Theta, Predict);
+        //std::cout << Theta << std::endl;
+        
+        std::cout << "Test predicts against lables:" << std::endl;
+        /// changing test_Y to a m x NUM_LABLE matrix
+        int m = test_Y.rows;
+        cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
+        int columnForOne;
+        for (int i = 0; i < m; i++) {
+            columnForOne = test_Y.at<double>(i,0);
+            /// we don't have lable 9=J in dataset, so we need to minus one from index 9 to match lables 0 to 24 in 24 cols
+            /// and we need to consider to add one later on, when we want to translate a binary row in Y_ to a lable in Y
+            if (columnForOne >= 9) --columnForOne;
+            Y_.at<double>(i, columnForOne) = 1.0;  /// other columns of the row i  is zero
+        }
+        double PRF[3] {0.0};
+        bool works = evalFun(Predict, Y_, 1.0, 0.5, PRF);
+        if (works)
+            std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl;
+
+        cv::Mat Lable;
+        lablePredict(Predict, 0.5, Lable);
+        cv::hconcat(test_Y, Lable, Lable);
+        std::cout << Lable << std::endl;
     }
         
         
@@ -108,11 +140,12 @@ int main(int argc, char* argv[]) {
     
     // NOTE: -CASE 5 : test sigmoid and sigmoidPrime and log
     if (CASE1 == 5 || CASE2 == 5) {
-        std::vector<double> data {-1, -0.5, 0, 0.5, 1};
+        std::vector<double> data {-1, -0.5, 0, 0.5, 1, 2};
         cv::Mat ex(data, CV_64F);
-        std::cout <<
-        sigmoidPrime(ex) << std::endl; // values between 0 to 0.25 (at zero)
-        std::cout << log(ex) << std::endl; // values nan, nan, -inf, -0.6, 0 (at 1)
+        std::cout << sigmoid(ex) << std::endl; // 0.5 at zero
+        std::cout << sigmoidPrime(ex) << std::endl; // values between 0 to 0.25 (0.25 at zero)
+        std::cout << log(ex) << std::endl; // values nan, nan, -inf, -0.7, 0, 0.7 (0 at 1)
+        std::cout << log(0.5) << std::endl; // log --> ln  and log10 is base 10
     }
     
     

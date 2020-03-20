@@ -37,17 +37,10 @@ int main(int argc, char* argv[]) {
     // TESTING evalFun
     /// first: we should get 100% TP if we test test_Y against itself
     std::cout << "\nTest lables against lables:" << std::endl;
-    /// changing test_Y to a m x NUM_LABLE matrix copying the logic we have inside cost function in cost.h at line 105
-    int m = test_Y.rows;
-    cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
-    int columnForOne;
-    for (int i = 0; i < m; i++) {
-        columnForOne = test_Y.at<double>(i,0);
-        /// we don't have lable 9=J in dataset, so we need to minus one from index 9 to match lables 0 to 24 in 24 cols
-        /// and we need to consider to add one later on, when we want to translate a binary row in Y_ to a lable in Y
-        if (columnForOne >= 9) --columnForOne;
-        Y_.at<double>(i, columnForOne) = 1;  /// other columns of the row i  is zero
-    }
+    /// changing test_Y to a m x NUM_LABLE matrix
+    cv::Mat Y_;
+    makeBinaryLables(test_Y, Y_);
+    
     double PRF[3] {0.0};
     bool works = evalFun(Y_, Y_, 1.0, 0.5, PRF);
     if (works)

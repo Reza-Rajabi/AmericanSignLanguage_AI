@@ -84,6 +84,18 @@ void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
     rolled = rolled.rowRange(1, rolled.rows); /// removed the extra zero here
 }
 
+void makeBinaryLables(const cv::Mat& originalLable, cv::Mat& binaryLable) {
+    int m = originalLable.rows;
+    binaryLable = cv::Mat::zeros(m, OUT_SIZE, CV_64F);
+    for (int i = 0; i < m; i++) {
+        int columnForOne = originalLable.at<double>(i,0);
+        /// we don't have lable 9=J in dataset, so we need to minus one from index 9 to match lables 0 to 24 in 24 cols
+        /// and we need to consider to add one later on, when we want to translate a binary row in Y_ to a lable in Y
+        if (columnForOne > 9) --columnForOne;
+        binaryLable.at<double>(i, columnForOne) = 1;  /// other columns of the row i  is zero
+    }
+}
+
 void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
@@ -112,14 +124,8 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     
 
     // NOTE: - changing each lable of lables to a vector of (0s and a 1)
-    cv::Mat Y_ = cv::Mat::zeros(m, OUT_SIZE, CV_64F);
-    for (int i = 0; i < m; i++) {
-        int columnForOne = Y.at<double>(i,0);
-        /// we don't have lable 9=J in dataset, so we need to minus one from index 9 to match lables 0 to 24 in 24 cols
-        /// and we need to consider to add one later on, when we want to translate a binary row in Y_ to a lable in Y
-        if (columnForOne >= 9) --columnForOne;
-        Y_.at<double>(i, columnForOne) = 1;  /// other columns of the row i  is zero
-    }
+    cv::Mat Y_;
+    makeBinaryLables(Y, Y_);
     
     
     // NOTE: - calculating cost J

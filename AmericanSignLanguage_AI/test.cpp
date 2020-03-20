@@ -22,13 +22,15 @@
 // Each test case may have its acceptence criteria commented
 /// -CASE 0 : off two simultanous scenarios
 /// -CASE 1 : tests loading data
-/// -CASE 2 : tests displays function                                                   ---> needs CASE 1
-/// -CASE 3 : tests train function                                                         ---> needs CASE 1
-/// -CASE 4 : tests backpropagation algorithm in cost function          ---> needs CASE 1
+/// -CASE 2 : tests displays function                                                                ---> needs CASE 1
+/// -CASE 3 : tests train function, MOST GENERAL TEST SCENARIO          ---> needs CASE 1
+/// -CASE 4 : tests backpropagation algorithm in cost function                       ---> needs CASE 1
 /// -CASE 5 : tests sigmoid and sigmoidPrime and log
 /// -CASE 6 : tests random initializer
 /// -CASE 7 : tests roll and unroll functions
 /// -CASE 8 : tests hconcat function of opencv
+/// -CASE 9 : test lable function                                                                         ---> needs CASE 1
+
 
 
 int main(int argc, char* argv[]) {
@@ -79,23 +81,16 @@ int main(int argc, char* argv[]) {
         
         std::cout << "Test predicts against lables:" << std::endl;
         /// changing test_Y to a m x NUM_LABLE matrix
-        int m = test_Y.rows;
-        cv::Mat Y_ = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
-        int columnForOne;
-        for (int i = 0; i < m; i++) {
-            columnForOne = test_Y.at<double>(i,0);
-            /// we don't have lable 9=J in dataset, so we need to minus one from index 9 to match lables 0 to 24 in 24 cols
-            /// and we need to consider to add one later on, when we want to translate a binary row in Y_ to a lable in Y
-            if (columnForOne >= 9) --columnForOne;
-            Y_.at<double>(i, columnForOne) = 1.0;  /// other columns of the row i  is zero
-        }
+        cv::Mat Y_;
+        makeBinaryLables(test_Y, Y_);
+        
         double PRF[3] {0.0};
-        bool works = evalFun(Predict, Y_, 1.0, 0.5, PRF);
+        bool works = evalFun(Predict, Y_, 1.0, 0.0, PRF);
         if (works)
             std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl;
 
         cv::Mat Lable;
-        lablePredict(Predict, 0.5, Lable);
+        lablePredict(Predict, 0.0, Lable);
         cv::hconcat(test_Y, Lable, Lable);
         std::cout << Lable << std::endl;
     }
@@ -200,6 +195,28 @@ int main(int argc, char* argv[]) {
         cv::Mat ones = cv::Mat::ones(right.rows, 1,CV_64F);
         cv::hconcat(ones, right, right);
         std::cout << right << std::endl;
+    }
+    
+    
+    // NOTE: -CASE 9 : test lable function
+    if (CASE1 == 9 || CASE2 == 9) {
+        /// should get identical result if we lable the test_Y
+        cv::Mat Y_;
+        makeBinaryLables(test_Y, Y_);
+        //cv::hconcat(test_Y, Y_, Y_);
+        //std::cout << Y_ << std::endl;
+        cv::Mat Lable;
+        lablePredict(Y_, 0.0, Lable);
+        int countErr = 0;
+        for (int r = 0; r < Lable.rows; r++) {
+            double l = Lable.at<double>(r,0);
+            double y = test_Y.at<double>(r,0);
+            if (l != y) {
+                std::cout << "at " << r << ": "<< y << ", " << l << std::endl;
+                countErr++;
+            }
+        }
+        std::cout << "errors: " << countErr << std::endl;
     }
     
     

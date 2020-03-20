@@ -27,21 +27,23 @@ void predict(cv::Mat& X, cv::Mat& params, cv::Mat& Predict) {
 void lablePredict(cv::Mat& Predict, double Threshold, cv::Mat& Lable) {
     int m = Predict.rows;
     Lable = cv::Mat::zeros(m, 1, CV_64F);
-    double maxIndex = 0, val;
-    double max = Predict.at<double>(0,0);
+    int maxIndex = 0;
+    double val, max;
     
     for (int r = 0; r < m; r++) {
+        max = Predict.at<double>(r,0);
+        maxIndex = 0;
         for (int c = 0; c < NUM_LABLE; c++) {
             val = Predict.at<double>(r,c);
             if (val > max) {
-                maxIndex = c;
+                maxIndex = c;   /// maxIndex is the lable for row r
                 max = val;
             }
         }
-        /// we don have lable 9=J in predicts, so we need to plus one from index (9-1) to map 0 to 24 into 25 predicts
+        /// we don have lable 9=J in predicts, so we need to plus one from index 9 to map 0 to 24 into 25 predicts
         /// we have considered that, when we wanted to make binary rows from lables in cost function
-        if (maxIndex >= 8) ++maxIndex;  /// maxIndex is the predict for row r
         if (max < Threshold) maxIndex = -1; /// labled as NOT BELONG
+        else if (maxIndex > 8) ++maxIndex;
         Lable.at<double>(r,0) = maxIndex;
     }
 }

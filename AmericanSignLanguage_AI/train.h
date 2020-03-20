@@ -26,7 +26,6 @@ void train_gradDescent(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_histor
     J_history = cv::Mat::zeros(OPT_ITERATE, 1, CV_64F);
     cv::Mat Theta_g;
     double J = 1.0; /// something biger than OPT_CONVERGE to start the loop
-    int m = X.rows;
     
     std::ofstream ofs;
     ofs.open("jHistory.csv");
@@ -41,7 +40,7 @@ void train_gradDescent(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_histor
     #endif
         
         costFunction(Theta, X, Y, lambda, J, Theta_g);
-        Theta -= (1.0/m) * OPT_ALPHA * Theta_g;
+        Theta -= OPT_ALPHA * Theta_g;
         
         J_history.at<double>(i,0) = J;
         if (ofs.is_open()) ofs << i+1 << "," << J << std::endl;

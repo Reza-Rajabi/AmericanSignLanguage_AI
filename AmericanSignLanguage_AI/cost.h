@@ -117,9 +117,9 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     int m = X.rows;
     cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);
     cv::Mat a[NUM_LAYER];
-    for(int i = 0; i < NUM_LAYER; i++) {
-        a[i] = (i == 0) ? X : sigmoid(a[i-1] * Theta[i-1].t());
-        if(i != NUM_LAYER-1) cv::hconcat(ones, a[i], a[i]);  /// don't add ones to last a[i]
+    for(int l = 0; l < NUM_LAYER; l++) {
+        a[l] = (l == 0) ? X : sigmoid(a[l-1] * Theta[l-1].t());
+        if(l != NUM_LAYER-1) cv::hconcat(ones, a[l], a[l]);  /// don't add ones to last a[i]
     }
     
 
@@ -129,9 +129,9 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     
     
     // NOTE: - calculating cost J
-    /// Y_.t() -->  k x m       a4  --> m x k
-    /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
-    J = (-1.0/m) * cv::sum( Y_.t() * log(a[NUM_LAYER-1]) + (1 - Y_.t()) * log(1 - a[NUM_LAYER-1]) )[0];
+    /// Y_ -->  m x k       a4  --> m x k
+    cv::Mat h = a[NUM_LAYER-1];
+    J = (-1.0/m) * cv::sum( Y_.mul( log(h) ) + (1 - Y_).mul( log(1 - h) ) )[0];
     
     
     // NOTE: - backpropagation to calcute gradients
@@ -139,8 +139,8 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     cv::Mat delta[NUM_LAYER-1];
     cv::Mat Theta_g[NUM_LAYER-1];
     /// removing the first column (corresponding to the bias of layer) from each of Theta
-    for (int i = 0; i < NUM_LAYER - 1; i++) {
-        Theta_[i] = Theta[i].colRange(1, Theta[i].cols);
+    for (int l = 0; l < NUM_LAYER - 1; l++) {
+        Theta_[l] = Theta[l].colRange(1, Theta[l].cols);
     }
     /// finding each error using `backpropagation`
     /// delta4 --> delta[3] --> m x k                                            Thetha_g3 --> (k x m)  * (m x s3+1)
@@ -148,27 +148,27 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)                  Thetha_g1 --> (s2 x m) * (m x s1+1)
     /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n+1)
     /// delta0 -->  ------  -->                  ---> we ignore this
-    for (int i = NUM_LAYER-2; i >= 0; i--) {
-        if (i == NUM_LAYER-2)   /// delta[ i ] : 3->L5, 2->L4, 1->L3, 0->L2, and no error for L1
-            delta[i] = (a[i+1] - Y_);
+    for (int l = NUM_LAYER-2; l >= 0; l--) {
+        if (l == NUM_LAYER-2)   /// delta[ i ] : 3->L5, 2->L4, 1->L3, 0->L2, and no error for L1
+            delta[l] = (a[l+1] - Y_);
         else                    /// delta[layer l] = delta[l + 1] * Theta[l] . sigmoidPrime(a[l - 1] * Theta[l - 1]
-            delta[i] = ( delta[i+1] * Theta_[i+1] ).mul( sigmoidPrime(a[i] * Theta[i].t()) );
+            delta[l] = ( delta[l+1] * Theta_[l+1] ).mul( sigmoidPrime(a[l] * Theta[l].t()) );
     }
     /// feeding forward again to calculate Theta gredient
-    for (int i = 0; i < NUM_LAYER-1; i++) {
-        Theta_g[i] = (1.0/m) * delta[i].t() * a[i];
+    for (int l = 0; l < NUM_LAYER-1; l++) {
+        Theta_g[l] = (1.0/m) * delta[l].t() * a[l];
     }
 
     
     // NOTE: - regularization of the cost and Theta_g to prevent overfitting
     /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
     /// needs to set the first column (correspond to the bias of the layer) of Theta to zero (do not regularize bias)
-    for (int i = 0; i < NUM_LAYER-1; i++) {
-        J += (lambda/(2.0 * m)) * cv::sum( Theta_[i].mul(Theta_[i]) )[0];
-        for (int r = 0; r < Theta[i].rows; r++) {
-            Theta[i].at<double>(r,0) = 0;
+    for (int l = 0; l < NUM_LAYER-1; l++) {
+        J += (lambda/(2.0 * m)) * cv::sum( Theta_[l].mul(Theta_[l]) )[0];
+        for (int r = 0; r < Theta[l].rows; r++) {
+            Theta[l].at<double>(r,0) = 0;
         }
-        Theta_g[i] += ((double) lambda/m) * Theta[i];
+        Theta_g[l] += ((double) lambda/m) * Theta[l];
     }
 
     

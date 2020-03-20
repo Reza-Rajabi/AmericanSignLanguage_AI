@@ -188,8 +188,8 @@ bool evalFun(cv::Mat& Predict, cv::Mat& Test, double beta, double threshold, dou
         std::cout << "None of the cases has been predicted positive!" << std::endl;
     }
     else {
-        PRF[0] = TP/(TP + FP); /// Precision
-        PRF[1] = TP/(TP + FN); /// Recall
+        PRF[0] = (double) TP/(TP + FP); /// Precision
+        PRF[1] = (double) TP/(TP + FN); /// Recall
         
         double b = pow(beta,2);
         PRF[2] = (1 + b) * PRF[0] * PRF[1] / (b * PRF[0] + PRF[1]); /// F_beta

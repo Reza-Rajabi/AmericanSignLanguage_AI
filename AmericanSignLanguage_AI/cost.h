@@ -34,7 +34,7 @@ cv::Mat sigmoid(const cv::Mat& Z) {
 
 cv::Mat sigmoidPrime(const cv::Mat& Z) {
     cv::Mat G = sigmoid(Z);
-    return G.mul(1 - G);
+    return G.mul(1.0 - G);
 }
 
 cv::Mat log(const cv::Mat& M) {
@@ -125,7 +125,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     // NOTE: - calculating cost J
     /// Y_.t() -->  k x m       a4  --> m x k
     /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
-    J = -1/m * cv::sum( Y_.t() * log(a[NUM_LAYER-1]) + (1 - Y_.t()) * log(1 - a[NUM_LAYER-1]) )[0];
+    J = (-1.0/m) * cv::sum( Y_.t() * log(a[NUM_LAYER-1]) + (1 - Y_.t()) * log(1 - a[NUM_LAYER-1]) )[0];
     
     
     // NOTE: - backpropagation to calcute gradients
@@ -150,7 +150,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     }
     /// feeding forward again to calculate Theta gredient
     for (int i = 0; i < NUM_LAYER-1; i++) {
-        Theta_g[i] = 1/m * delta[i].t() * a[i];
+        Theta_g[i] = (1.0/m) * delta[i].t() * a[i];
     }
 
     
@@ -158,11 +158,11 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
     /// needs to set the first column (correspond to the bias of the layer) of Theta to zero (do not regularize bias)
     for (int i = 0; i < NUM_LAYER-1; i++) {
-        J += lambda/(2 * m) * cv::sum( Theta_[i].mul(Theta_[i]) )[0];
+        J += (lambda/(2.0 * m)) * cv::sum( Theta_[i].mul(Theta_[i]) )[0];
         for (int r = 0; r < Theta[i].rows; r++) {
             Theta[i].at<double>(r,0) = 0;
         }
-        Theta_g[i] += lambda/m * Theta[i];
+        Theta_g[i] += ((double) lambda/m) * Theta[i];
     }
 
     

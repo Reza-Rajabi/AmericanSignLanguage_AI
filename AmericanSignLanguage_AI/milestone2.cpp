@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
     /// there are no Negative value in the test data so TN will be zero, FN barely happens unless for a big thershold (ex. 0.8)
     std::cout << "\nTest random predicts against lables:" << std::endl;
     cv::RNG randomGenerator;
+    int m = test_Y.rows;
     cv::Mat Rand_Predict = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
     for (int r = 0; r < m; r++) {
         for (int c = 0; c < NUM_LABLE; c++) {

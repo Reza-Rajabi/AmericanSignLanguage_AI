@@ -11,7 +11,7 @@
 
 void predict(cv::Mat& X, cv::Mat& params, cv::Mat& Predict) {
     cv::Mat Theta[NUM_LAYER-1];
-    unrollTheta(Theta, params);
+    rollTheta(Theta, params);
     
     int m = X.rows;
     cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);

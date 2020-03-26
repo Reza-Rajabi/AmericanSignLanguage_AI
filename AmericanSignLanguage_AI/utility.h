@@ -57,8 +57,8 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
         std::stringstream ss(line);
         for(int c = 0; c < NUM_FEATURE+1; c++) {
             getline(ss, single, ',');
-            if (c == 0) Y.at<double>(r, 0) = std::atoi(single.c_str());
-            else X.at<double>(r,c) = std::atoi(single.c_str());
+            if (c == 0) Y.at<double>(r, 0) = std::atof(single.c_str());
+            else X.at<double>(r,c) = std::atof(single.c_str());
         }
     }
     in.close();

@@ -59,29 +59,34 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     return weights;
 }
 
-void unrollTheta(cv::Mat unrolled[], const cv::Mat& rolled) {
+void rollTheta(cv::Mat rolled[], const cv::Mat& unrolled) {
     /// the dimention of each Thetha is:  the next layer size x its layer size
-     /// Theta0 --> s1 x (n+1)
-     /// Theta1 --> s2 x (s1+1)
-     /// Theta2 --> s3 x (s2+1)
-     /// Theta3 --> k  x (s3+1)
-     int rangeStart = 0, rangeEnd = 0;
-     for (int l = 0; l < NUM_LAYER-1; l++) {
-         rangeEnd += S[l+1] * (S[l]+1);
-         cv::Range range(rangeStart, rangeEnd);
-         cv::Mat temp = rolled(range, cv::Range::all());
-         unrolled[l] = cv::Mat(S[l+1], S[l]+1, CV_64F, temp.data);
-         rangeStart = rangeEnd;
-     }
+    /// Theta0 --> s1 x (n+1)
+    /// Theta1 --> s2 x (s1+1)
+    /// Theta2 --> s3 x (s2+1)
+    /// Theta3 --> k  x (s3+1)
+    int rangeStart = 0, rangeEnd = 0;
+    cv::Mat transposed[NUM_LAYER-1];
+    for (int l = 0; l < NUM_LAYER-1; l++) {
+        rangeEnd += S[l+1] * (S[l]+1);
+        cv::Range range(rangeStart, rangeEnd);
+        cv::Mat temp = unrolled(range, cv::Range::all());
+        transposed[l] = cv::Mat(S[l]+1, S[l+1], CV_64F, temp.data); /// transposed column& row
+        rangeStart = rangeEnd;
+    }
+    for (int l = 0; l < NUM_LAYER-1; l++) {
+        rolled[l] = transposed[l].t();
+    }
 }
 
-void rollTheta(cv::Mat unrolled[], cv::Mat& rolled) {
-    rolled = cv::Mat::zeros(1, 1, CV_64F);   /// got one extra zero here
+void unrollTheta(cv::Mat rolled[], cv::Mat& unrolled) {
+    unrolled = cv::Mat::zeros(1, 1, CV_64F);   /// got one extra zero here
     for (int i = 0; i < NUM_LAYER-1; i++) {
-        cv::Mat temp = cv::Mat(unrolled[i].rows * unrolled[i].cols , 1, CV_64F, unrolled[i].data);
-        cv::vconcat(rolled, temp, rolled);
+        cv::Mat transposed = rolled[i].t();
+        cv::Mat temp = cv::Mat(rolled[i].rows * rolled[i].cols ,1, CV_64F, transposed.data);
+        cv::vconcat(unrolled, temp, unrolled);
     }
-    rolled = rolled.rowRange(1, rolled.rows); /// removed the extra zero here
+    unrolled = unrolled.rowRange(1, unrolled.rows); /// removed the extra zero here
 }
 
 void makeBinaryLables(const cv::Mat& originalLable, cv::Mat& binaryLable) {
@@ -104,7 +109,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
                   cv::Mat& gradient) {      /// gradient to return (partial derivative of cost func.)
     // NOTE: - extracting Theta from vertival vector
     cv::Mat Theta[NUM_LAYER-1];
-    unrollTheta(Theta, params);
+    rollTheta(Theta, params);
     
     
     // NOTE: - feeding forward and calculating activation parameters
@@ -173,8 +178,8 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
 
     
     // NOTE: - roll gradients
-    rollTheta(Theta_g, gradient);
-     
+    unrollTheta(Theta_g, gradient);
+    
     
     // NOTE: Done. J and gradient has been calculated
 }

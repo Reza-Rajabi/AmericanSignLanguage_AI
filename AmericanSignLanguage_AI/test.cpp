@@ -27,7 +27,7 @@
 /// -CASE 4 : tests backpropagation algorithm in cost function                       ---> needs CASE 1
 /// -CASE 5 : tests sigmoid and sigmoidPrime and log
 /// -CASE 6 : tests random initializer
-/// -CASE 7 : tests roll and unroll functions
+/// -CASE 7 : tests roll and unroll functions with an embeded condition
 /// -CASE 8 : tests hconcat function of opencv
 /// -CASE 9 : test lable function                                                                         ---> needs CASE 1
 
@@ -61,12 +61,12 @@ int main(int argc, char* argv[]) {
         
     // NOTE: -CASE 3 : tests train function
     if (CASE1 == 3 || CASE2 == 3) {
-        cv::Mat Theta_unroll[NUM_LAYER-1];
+        cv::Mat Theta_roll[NUM_LAYER-1];
         for(int i = 0; i < NUM_LAYER-1; i++) {
-            Theta_unroll[i] = initializeLayerParameters(S[i], S[i+1]);
+            Theta_roll[i] = initializeLayerParameters(S[i], S[i+1]);
         }
         cv::Mat Theta;
-        rollTheta(Theta_unroll, Theta);
+        unrollTheta(Theta_roll, Theta);
         cv::Mat J_history;
         train_gradDescent(train_X, train_Y, Theta, J_history);
         /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
         for(int i = 0; i < NUM_LAYER-1; i++) {
             T_[i] = initializeLayerParameters(S[i], S[i+1]);
         }
-        rollTheta(T_, T);
+        unrollTheta(T_, T);
         cv::Mat gradApproximate = cv::Mat::zeros(T.rows, 1, CV_64F);
         cv::Mat d = cv::Mat::zeros(T.rows, 1, CV_64F);
         costFunction(T, X, Y, lambda, J_plus, T_prime);
@@ -158,31 +158,31 @@ int main(int argc, char* argv[]) {
     // NOTE: -CASE 7 : test roll and unroll functions
     /// this test has a conditional embeded test that needs to setup manually
     if (CASE1 == 7 || CASE2 == 7) {
-        cv::Mat unrolled[4];
+        cv::Mat rolled[4];
         double d0[] {1,2,3,4,5,6,7,8,9};
-        unrolled[0] = cv::Mat(3,3,CV_64F,d0);
-        std::cout << unrolled[0] << std::endl;
+        rolled[0] = cv::Mat(3,3,CV_64F,d0);
+        std::cout << rolled[0] << std::endl;
         double d1[] {10,12,13,14};
-        unrolled[1] = cv::Mat(2,2,CV_64F,d1);
-        std::cout << unrolled[1] << std::endl;
+        rolled[1] = cv::Mat(2,2,CV_64F,d1);
+        std::cout << rolled[1] << std::endl;
         double d2[] {11,15,16,17,18,19};
-        unrolled[2] = cv::Mat(3,2,CV_64F,d2);
-        std::cout << unrolled[2] << std::endl;
+        rolled[2] = cv::Mat(3,2,CV_64F,d2);
+        std::cout << rolled[2] << std::endl;
         double d3[] {111,115,146,147,168,159};
-        unrolled[3] = cv::Mat(2,3,CV_64F,d3);
-        std::cout << unrolled[3] << std::endl;
+        rolled[3] = cv::Mat(2,3,CV_64F,d3);
+        std::cout << rolled[3] << std::endl;
         
-        cv::Mat rolled;
-        rollTheta(unrolled, rolled);
-        std::cout << rolled << std::endl;
+        cv::Mat unrolled;
+        unrollTheta(rolled, unrolled);
+        std::cout << unrolled << std::endl;
         
         // for this part: temporary needs to change S[] = {1,2,2,2,3}
         // then, from 25 rows makes S[l+1] x (S[l]+1) --> (2x2)+(2x3)+(2x3)+(3x3) matrice
         bool makeSureChanged_S = false;
         if (makeSureChanged_S) {
-            unrollTheta(unrolled, rolled);
+            rollTheta(rolled, unrolled);
             for(int i = 0; i < 4; i++) {
-                std::cout << unrolled[i] << std::endl;
+                std::cout << rolled[i] << std::endl;
             }
         }
     }

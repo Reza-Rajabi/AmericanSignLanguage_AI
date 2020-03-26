@@ -73,24 +73,31 @@ public:
     }
     
     // `Function` abstract class methods
-    double calc(const double* j) const {
-        cv::Mat params = cv::Mat(getDims(), 1, CV_64F, (void*)j);
-        cv::Mat X = _X.clone();
+    double calc(const double* X_) const {
+        cv::Mat params = _params.clone();
+        cv::Mat X = cv::Mat(_X.rows, NUM_FEATURE, CV_64F, (void*)X_);
         cv::Mat Y = _Y.clone();
         double lambda = _lambda;
         double J = _J;
-        cv::Mat gradient;
+        cv::Mat gradient = _gradient.clone();
         costFunction(params, X, Y, lambda, J, gradient);
         return J;
     }
+    void getGragient(const double* X, double* grad) {
+        _X = cv::Mat(_X.rows, NUM_FEATURE, CV_64F, (void*)X);
+        _gradient = cv::Mat(_gradient.rows, 1, CV_64F, (void*)grad);
+        costFunction(_params, _X, _Y, _lambda, _J, _gradient);
+        grad = (double*) _gradient.data;
+    }
     int getDims() const {
-        return _params.rows;
+        return NUM_FEATURE;
     }
 };
 
 void train_conjGrad(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta) {
     cv::Mat Theta_g;
     double J = 0;
+    costFunction(Theta, X, Y, lambda, J, Theta_g); /// to initialize Theta_gs
 
     /// creating a solver that uses conjuction gradient optimization algorithm to find the minimum
     cv::Ptr<cv::MinProblemSolver::Function> f(new Cost(Theta, X, Y, lambda, J, Theta_g));
@@ -103,8 +110,8 @@ void train_conjGrad(cv::Mat& X, cv::Mat& Y, cv::Mat& Theta) {
     std::cout << "Training Start" << std::endl;
     auto start = std::chrono::system_clock::now();
     J = fmincg->minimize(Theta);
-    std::cout << "Training Done" << std::endl;
     auto end = std::chrono::system_clock::now();
+    std::cout << "Training Done" << std::endl;
     std::cout << J << std::endl;
     std::cout << Theta << std::endl;
     

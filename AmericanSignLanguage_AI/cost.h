@@ -20,7 +20,8 @@ const int OUT_SIZE = 24;        /// same as NUM_LABLE                   k
 const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.
 
 const int NUM_LAYER = 5;
-const double lambda = 2.0;      /// the regularization factor value to prevent overfitting
+const double LAMBDA = 2.0;      /// the regularization factor value to prevent overfitting
+const double EPSILON = 0.1;     /// the random initialization of the weights parameter
 
 const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size
 
@@ -47,16 +48,11 @@ cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     // NOTE: - randomly initializes parameters for a layer with inConnections number of
     ///        incomming connections and outConnections number of outcomming connections
     ///        it returns a matrice of size (outConnections, 1 + inConnections)
-    double epsilon = sqrt(6)/sqrt(outConnections+inConnections+1);
+    double epsilon = EPSILON;
     cv::Mat weights = cv::Mat::zeros(outConnections, 1 + inConnections, CV_64F);
-    cv::RNG randomGenerator;
-    for(int r = 0; r < outConnections; r++) {
-        for (int c = 0; c < 1+inConnections; c++) {
-            weights.at<double>(r,c) = randomGenerator.uniform((double)0.0, (double)1.0) * 2 * epsilon - epsilon;
-        }
-    }
+    cv::randu(weights, 0.0, 1.0);
     
-    return weights;
+    return weights * 2 * epsilon - epsilon;
 }
 
 void rollTheta(cv::Mat rolled[], const cv::Mat& unrolled) {

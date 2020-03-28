@@ -85,12 +85,12 @@ int main(int argc, char* argv[]) {
         makeBinaryLables(test_Y, Y_);
         
         double PRF[3] {0.0};
-        bool works = evalFun(Predict, Y_, 1.0, 0.0, PRF);
+        bool works = evalFun(Predict, Y_, BETA, THRESHOLD, PRF);
         if (works)
             std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl;
 
         cv::Mat Lable;
-        lablePredict(Predict, 0.0, Lable);
+        lablePredict(Predict, THRESHOLD, Lable);
         cv::hconcat(test_Y, Lable, Lable);
         std::cout << Lable << std::endl;
     }
@@ -109,15 +109,15 @@ int main(int argc, char* argv[]) {
         unrollTheta(T_, T);
         cv::Mat gradApproximate = cv::Mat::zeros(T.rows, 1, CV_64F);
         cv::Mat d = cv::Mat::zeros(T.rows, 1, CV_64F);
-        costFunction(T, X, Y, lambda, J_plus, T_prime);
+        costFunction(T, X, Y, LAMBDA, J_plus, T_prime);
         for (int i = 0; i < T.rows; i++) {
         #ifdef TERMINAL
             std::cout << '\r' << "Testing Backpropagation: " << i+1 << std::flush;
         #endif
 
             d.at<double>(i,0) = eps;
-            costFunction((T + d), X, Y, lambda, J_plus, temp);
-            costFunction((T - d), X, Y, lambda, J_minus, temp);
+            costFunction((T + d), X, Y, LAMBDA, J_plus, temp);
+            costFunction((T - d), X, Y, LAMBDA, J_minus, temp);
             gradApproximate.at<double>(i,0) = (J_plus - J_minus)/(2.0*eps);
             d.at<double>(i,0) = 0;
         }

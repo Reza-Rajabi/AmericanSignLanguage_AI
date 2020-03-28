@@ -20,6 +20,8 @@ const int NUM_FEATURE = 784; /// each row of data includes lables and the gray s
 const std::string windowName_mxn = "m x n random samples";
 const std::string windowName_one = "sample";
 const double DISPLAY_SCALE = 2.0;
+const double THRESHOLD = 0.5;
+const double BETA = 1.0;
 
 void openStream(const char* file, std::ifstream& in) {
     in.open(file, std::ifstream::in);

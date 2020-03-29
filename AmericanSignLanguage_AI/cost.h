@@ -38,6 +38,19 @@ cv::Mat sigmoidPrime(const cv::Mat& Z) {
     return G.mul(1.0 - G);
 }
 
+cv::Mat swish(const cv::Mat& Z) {
+    return Z.mul(sigmoid(Z));
+}
+
+cv::Mat swishPrime(const cv::Mat& Z) {
+    return swish(Z) + sigmoid(Z).mul(1 - swish(Z));
+}
+
+struct Activation {
+    cv::Mat (*f) (const cv::Mat&) = sigmoid;
+    cv::Mat (*fPrime) (const cv::Mat&) = sigmoidPrime;
+} AC;
+
 cv::Mat log(const cv::Mat& M) {
     cv::Mat logM;
     cv::log(M, logM);
@@ -97,7 +110,8 @@ void makeBinaryLables(const cv::Mat& originalLable, cv::Mat& binaryLable) {
     }
 }
 
-void costFunction(const cv::Mat& params,    /// initial parameters in a rolled up vector
+void costFunction(Activation A,             /// activation function structure
+                  const cv::Mat& params,    /// initial parameters in a rolled up vector
                   const cv::Mat& X,         /// featurs
                   const cv::Mat& Y,         /// lables
                   double lambda,            /// regularization parameter
@@ -119,7 +133,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
     cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);
     cv::Mat a[NUM_LAYER];
     for(int l = 0; l < NUM_LAYER; l++) {
-        a[l] = (l == 0) ? X : sigmoid(a[l-1] * Theta[l-1].t());
+        a[l] = (l == 0) ? X : A.f(a[l-1] * Theta[l-1].t());
         if(l != NUM_LAYER-1) cv::hconcat(ones, a[l], a[l]);  /// don't add ones to last a[i]
     }
     
@@ -153,7 +167,7 @@ void costFunction(const cv::Mat& params,    /// initial parameters in a rolled u
         if (l == NUM_LAYER-2)   /// delta[ i ] : 3->L5, 2->L4, 1->L3, 0->L2, and no error for L1
             delta[l] = (a[l+1] - Y_);
         else                    /// delta[layer l] = delta[l + 1] * Theta[l] . sigmoidPrime(a[l - 1] * Theta[l - 1]
-            delta[l] = ( delta[l+1] * Theta_[l+1] ).mul( sigmoidPrime(a[l] * Theta[l].t()) );
+            delta[l] = ( delta[l+1] * Theta_[l+1] ).mul( A.fPrime(a[l] * Theta[l].t()) );
     }
     /// feeding forward again to calculate Theta gredient
     for (int l = 0; l < NUM_LAYER-1; l++) {

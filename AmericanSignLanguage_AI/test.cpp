@@ -68,7 +68,9 @@ int main(int argc, char* argv[]) {
         cv::Mat Theta;
         unrollTheta(Theta_roll, Theta);
         cv::Mat J_history;
-        train_gradDescent(train_X, train_Y, Theta, J_history);
+        cv::Mat X;
+        cv::normalize(train_X, X);
+        train(AC, X, train_Y, Theta, J_history);
         /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
         
         // using second method
@@ -109,15 +111,15 @@ int main(int argc, char* argv[]) {
         unrollTheta(T_, T);
         cv::Mat gradApproximate = cv::Mat::zeros(T.rows, 1, CV_64F);
         cv::Mat d = cv::Mat::zeros(T.rows, 1, CV_64F);
-        costFunction(T, X, Y, LAMBDA, J_plus, T_prime);
+        costFunction(AC, T, X, Y, LAMBDA, J_plus, T_prime);
         for (int i = 0; i < T.rows; i++) {
         #ifdef TERMINAL
             std::cout << '\r' << "Testing Backpropagation: " << i+1 << std::flush;
         #endif
 
             d.at<double>(i,0) = eps;
-            costFunction((T + d), X, Y, LAMBDA, J_plus, temp);
-            costFunction((T - d), X, Y, LAMBDA, J_minus, temp);
+            costFunction(AC, (T + d), X, Y, LAMBDA, J_plus, temp);
+            costFunction(AC, (T - d), X, Y, LAMBDA, J_minus, temp);
             gradApproximate.at<double>(i,0) = (J_plus - J_minus)/(2.0*eps);
             d.at<double>(i,0) = 0;
         }

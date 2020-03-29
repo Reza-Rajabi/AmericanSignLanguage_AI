@@ -9,7 +9,7 @@
 #ifndef predict_h
 #define predict_h
 
-void predict(cv::Mat& X, cv::Mat& params, cv::Mat& Predict) {
+void predict(const cv::Mat& X, const cv::Mat& params, cv::Mat& Predict) {
     cv::Mat Theta[NUM_LAYER-1];
     rollTheta(Theta, params);
     
@@ -24,7 +24,7 @@ void predict(cv::Mat& X, cv::Mat& params, cv::Mat& Predict) {
     Predict = h[NUM_LAYER-1];
 }
 
-void lablePredict(cv::Mat& Predict, double Threshold, cv::Mat& Lable) {
+void lablePredict(const cv::Mat& Predict, double Threshold, cv::Mat& Lable) {
     int m = Predict.rows;
     Lable = cv::Mat::zeros(m, 1, CV_64F);
     int maxIndex = 0;

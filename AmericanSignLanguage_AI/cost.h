@@ -88,7 +88,7 @@ void rollTheta(cv::Mat rolled[], const cv::Mat& unrolled) {
     }
 }
 
-void unrollTheta(cv::Mat rolled[], cv::Mat& unrolled) {
+void unrollTheta(const cv::Mat rolled[], cv::Mat& unrolled) {
     unrolled = cv::Mat::zeros(1, 1, CV_64F);   /// got one extra zero here
     for (int i = 0; i < NUM_LAYER-1; i++) {
         cv::Mat transposed = rolled[i].t();

@@ -129,7 +129,7 @@ void display_nxm_random_samples_image(const cv::Mat& model, int nHeight, int mWi
 /// Predict: a matrix of m x NUM_LABLE representing m rows of predicted values in NUM_LABLE columns having a
 /// value between 0 and 1 which then the index of maximum value in a row represents the lable number for that row
 /// PRF: an array of three elements consist of Precision, Recall and F_beta parameters, in order, based on confusion matrix
-bool evalFun(cv::Mat& Predict, cv::Mat& Test, double beta, double threshold, double* PRF) {
+bool evalFun(const cv::Mat& Predict, const cv::Mat& Test, double beta, double threshold, double* PRF) {
     /*
      * TP -> has a max value in the Predict row at the same index that Test has 1 and
      *       that max value is grater than threshold

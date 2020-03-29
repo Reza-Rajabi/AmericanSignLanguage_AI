@@ -22,7 +22,7 @@ const double OPT_ALPHA = 0.03;      /// the alpha value of the optimizer (train)
 const double OPT_CONVERGE = 1e-6;   /// the min cost amount that would consider as gradient descent has converged
 
 
-void train(Activation ac, cv::Mat& X, cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_history) {
+void train(Activation ac, const cv::Mat& X, const cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_history) {
     J_history = cv::Mat::zeros(OPT_ITERATE, 1, CV_64F);
     cv::Mat Theta_g;
     double J = 1.0; /// something biger than OPT_CONVERGE to start the loop

@@ -69,14 +69,15 @@ int main(int argc, char* argv[]) {
         unrollTheta(Theta_roll, Theta);
         cv::Mat J_history;
         cv::Mat X;
-        cv::normalize(train_X, X);
-        train(AC, X, train_Y, Theta, J_history);
+        Activation ac0;
+        ac0.f = swish;
+        ac0.fPrime = swishPrime;
+        normalize(train_X);
+        //train(ac0, train_X, train_Y, Theta, J_history);
+        train(AC, train_X, train_Y, Theta, J_history);
         /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
         
-        // using second method
-        //train_conjGrad(train_X, train_Y, Theta);
-        
-        
+        normalize(test_X);
         cv::Mat Predict;
         predict(test_X, Theta, Predict);
         //std::cout << Theta << std::endl;

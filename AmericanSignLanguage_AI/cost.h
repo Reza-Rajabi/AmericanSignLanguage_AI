@@ -68,6 +68,18 @@ cv::Mat log(const cv::Mat& M) {
     return logM;
 }
 
+void normalize(cv::Mat& X) {    /// normalizes each feature across the all samples
+    cv::Mat normalized = cv::Mat::zeros(X.rows,X.cols, CV_64F);
+    cv::Scalar mean, stdv;
+    for (int c = 0; c < X.cols; c++) {
+        cv::meanStdDev(X.col(c), mean, stdv);
+        for (int r = 0; r < X.rows; r++) {
+            normalized.at<double>(r,c) = (X.at<double>(r,c) - mean[0]) / stdv[0];
+        }
+    }
+    X = normalized;
+}
+
 cv::Mat initializeLayerParameters(int inConnections, int outConnections) {
     // NOTE: - randomly initializes parameters for a layer with inConnections number of
     ///        incomming connections and outConnections number of outcomming connections

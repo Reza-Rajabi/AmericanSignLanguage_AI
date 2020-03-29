@@ -39,7 +39,18 @@ cv::Mat sigmoidPrime(const cv::Mat& Z) {
 }
 
 cv::Mat swish(const cv::Mat& Z) {
-    return Z.mul(sigmoid(Z));
+    cv::Mat S(Z); /// copy
+    double temp, s;
+    for (int r = 0; r < Z.rows; r++) {
+        for (int c = 0; c < Z.cols; c++) {
+            temp = Z.at<double>(r,c);
+            s = temp * 1.0 / (1.0 + exp(-temp)); /// Z.mul(sigmoid(Z));
+            s = s >= 1.0 ? (1.0 - 1e-9) : s;
+            s = s <= 0.0 ? 1e-9 : s;
+            S.at<double>(r,c) = s;
+        }
+    }
+    return S;
 }
 
 cv::Mat swishPrime(const cv::Mat& Z) {

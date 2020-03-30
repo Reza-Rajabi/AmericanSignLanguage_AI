@@ -26,9 +26,10 @@ void train(Activation ac, const cv::Mat& X, const cv::Mat& Y, cv::Mat& Theta, cv
     J_history = cv::Mat::zeros(OPT_ITERATE, 1, CV_64F);
     cv::Mat Theta_g;
     double J = 1.0; /// something biger than OPT_CONVERGE to start the loop
+    cv::Mat adam = cv::Mat::zeros(Theta.rows, Theta.cols, CV_64F);
     
     std::ofstream ofs;
-    ofs.open("jHistory.csv");
+    ofs.open("jHistory.csv"); //, std::ofstream::app
     if (ofs.is_open()) ofs << "iter, cost" << std::endl;
     
     for (int i = 0; i < OPT_ITERATE && J > OPT_CONVERGE; i++) {
@@ -40,7 +41,10 @@ void train(Activation ac, const cv::Mat& X, const cv::Mat& Y, cv::Mat& Theta, cv
     #endif
         
         costFunction(ac, Theta, X, Y, LAMBDA, J, Theta_g);
-        Theta -= OPT_ALPHA * Theta_g;
+        adam = 0.999 * adam +  (1 - 0.999) * Theta_g.mul( Theta_g ) + 0.0001;
+        cv::sqrt(abs(adam), adam);
+        cv::divide(Theta_g, adam, adam);
+        Theta = Theta - OPT_ALPHA * adam;
         
         J_history.at<double>(i,0) = J;
         if (ofs.is_open()) ofs << i+1 << "," << J << std::endl;

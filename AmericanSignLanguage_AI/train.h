@@ -20,7 +20,19 @@
 const int OPT_ITERATE = 100;        /// maximum iteration for optimizer (train) function
 const double OPT_ALPHA = 0.03;      /// the alpha value of the optimizer (train) function
 const double OPT_CONVERGE = 1e-6;   /// the min cost amount that would consider as gradient descent has converged
+const int BATCH_SIZE = 10000;
 
+
+void batch(const cv::Mat& depot, cv::Mat& sub, std::vector<int>& index) {
+    int m = depot.rows;
+    if (index.size() == 0)
+        for (int i = 0; i < m; i++) {
+            index.push_back(i);
+            cv::randShuffle(index);
+        }
+    for (int r = 0; r < BATCH_SIZE; r++)
+        sub.push_back(depot.row(index[r]));
+}
 
 void train(Activation ac, const cv::Mat& X, const cv::Mat& Y, cv::Mat& Theta, cv::Mat& J_history) {
     J_history = cv::Mat::zeros(OPT_ITERATE, 1, CV_64F);
@@ -40,7 +52,12 @@ void train(Activation ac, const cv::Mat& X, const cv::Mat& Y, cv::Mat& Theta, cv
         if ((i+1)%25 == 0) std::cout << "Training: " << i+1 << std::endl;
     #endif
         
-        costFunction(ac, Theta, X, Y, LAMBDA, J, Theta_g);
+        cv::Mat batch_X, batch_Y;
+        std::vector<int> index;
+        batch(X, batch_X, index);
+        batch(Y, batch_Y, index);
+        
+        costFunction(ac, Theta, batch_X, batch_Y, LAMBDA, J, Theta_g);
         adam = 0.999 * adam +  (1 - 0.999) * Theta_g.mul( Theta_g ) + 0.0001;
         cv::sqrt(abs(adam), adam);
         cv::divide(Theta_g, adam, adam);

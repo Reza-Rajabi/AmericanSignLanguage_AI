@@ -11,7 +11,7 @@
 
 #include <opencv2/opencv.hpp>
                                                         // each layer length (L layers)
-const int IN_SIZE = 784;        /// same as NUM_FEATURE                 n
+const int IN_SIZE = NUM_FEATURE; /// same as NUM_FEATURE                 n
 const int HIDEN1_SIZE = 28;     ///                                     s1
 const int HIDEN2_SIZE = 28;     ///                                     s2
 const int HIDEN3_SIZE = 28;     ///                                     s3
@@ -21,7 +21,7 @@ const int NUM_LABLE = 24; /// labeles in (0-25) mapping letter A-Z, but no lable
 
 const int NUM_LAYER = 5;
 const double LAMBDA = 2.0;      /// the regularization factor value to prevent overfitting
-const double EPSILON = 0.1;     /// the random initialization of the weights parameter
+const double EPSILON = 0.2;     /// the random initialization of the weights parameter
 
 const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size
 

@@ -17,10 +17,10 @@
 /// counter on terminal
 //#define TERMINAL
 
-const int OPT_ITERATE = 100;        /// maximum iteration for optimizer (train) function
-const double OPT_ALPHA = 0.03;      /// the alpha value of the optimizer (train) function
-const double OPT_CONVERGE = 1e-6;   /// the min cost amount that would consider as gradient descent has converged
-const int BATCH_SIZE = 10000;
+const int OPT_ITERATE = 700;        /// maximum iteration for optimizer (train) function
+const double OPT_ALPHA = 0.01;      /// the alpha value of the optimizer (train) function
+const double OPT_CONVERGE = 1e-2;   /// the min cost amount that would consider as gradient descent has converged
+const int BATCH_SIZE = 18000;
 
 
 void batch(const cv::Mat& depot, cv::Mat& sub, std::vector<int>& index) {
@@ -71,6 +71,14 @@ void train(Activation ac, const cv::Mat& X, const cv::Mat& Y, cv::Mat& Theta, cv
     #ifdef TERMINAL
     std::cout << std::endl;
     #endif
+    
+    /// keeping what learned so far
+    ofs.open("learnedParams.csv");
+    if (ofs.is_open()) {
+        for (int r = 0; r < Theta.rows; r++) {
+            ofs << Theta.at<double>(r,0) << std::endl;
+        }
+    }
 }
 
 

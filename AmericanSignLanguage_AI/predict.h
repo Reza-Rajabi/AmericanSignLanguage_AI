@@ -9,7 +9,7 @@
 #ifndef predict_h
 #define predict_h
 
-void predict(const cv::Mat& X, const cv::Mat& params, cv::Mat& Predict) {
+void predict(Activation A, const cv::Mat& X, const cv::Mat& params, cv::Mat& Predict) {
     cv::Mat Theta[NUM_LAYER-1];
     rollTheta(Theta, params);
     
@@ -17,7 +17,7 @@ void predict(const cv::Mat& X, const cv::Mat& params, cv::Mat& Predict) {
     cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);
     cv::Mat h[NUM_LAYER];
     for(int i = 0; i < NUM_LAYER; i++) {
-        h[i] = (i == 0) ? X : sigmoid(h[i-1] * Theta[i-1].t());
+        h[i] = (i == 0) ? X : A.f(h[i-1] * Theta[i-1].t());
         if(i != NUM_LAYER-1) cv::hconcat(ones, h[i], h[i]);  /// don't add ones to last h[i]
     }
     

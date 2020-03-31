@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
         
         normalize(test_X);
         cv::Mat Predict;
-        predict(test_X, Theta, Predict);
+        predict(AC, test_X, Theta, Predict);
         //std::cout << Theta << std::endl;
         
         std::cout << "Test predicts against lables:" << std::endl;

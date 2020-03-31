@@ -36,7 +36,7 @@ int countRows(std::ifstream& in) {
     std::string dispose;
     while(getline(in, dispose)) ++counter;
     in.close();
-    return counter;
+    return --counter; /// dispose the title
 }
 
 void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
@@ -44,7 +44,8 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
     // count rows and initialize matrix
     openStream(file, in);
     std::future<int> _rows(std::async(countRows, std::ref(in)));
-    rows = _rows.get() - 1; /// ignore the first row (titles)
+    rows = _rows.get();
+    openStream(file, in);
     std::cout << "file: " << std::setw(20) << std::left;
     std::cout << file << "\t rows: " << rows << std::endl;
     Y = cv::Mat::zeros(rows, 1, CV_64F);
@@ -60,15 +61,15 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
         for(int c = 0; c < NUM_FEATURE+1; c++) {
             getline(ss, single, ',');
             if (c == 0) Y.at<double>(r, 0) = std::atof(single.c_str());
-            else X.at<double>(r,c) = std::atof(single.c_str());
+            else X.at<double>(r,c-1) = std::atof(single.c_str());
         }
     }
     in.close();
 }
 
 cv::Mat getImageFromModelRow(const cv::Mat& row) {
-    int rows = sqrt(NUM_FEATURE);
-    cv::Mat image = row.reshape(1, rows); /// 1 chanel
+    int rows = sqrt(row.cols);
+    cv::Mat image = row.reshape(0, rows);
     return image;
 }
 

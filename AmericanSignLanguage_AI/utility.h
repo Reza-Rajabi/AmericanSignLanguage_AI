@@ -12,16 +12,21 @@
 #include <opencv2/opencv.hpp>
 #include <fstream>
 #include <sstream>
-#include <future>
 
 enum EXIT_CODE { ERR_ARG = 1, ERR_OPEN };
 
-const int NUM_FEATURE = 784; /// each row of data includes lables and the gray scale value of the 28x28 = 784 pixels
+/// each row of data includes lables and the gray scale value of the 28x28 = 784 pixels
+/// MARK: - if reducing the features, must change [ONLY] the `IN_SIZE` in `cost.h`
+const int NUM_FEATURE = 784; // NEVER CHANGE
+
+const double DISPLAY_SCALE = 2.0;
+const double THRESHOLD = 0.5;       /// algorithm evaluation and prediction parameter
+const double BETA = 1.0;            /// algorithm evaluation parameter
+
 const std::string windowName_mxn = "m x n random samples";
 const std::string windowName_one = "sample";
-const double DISPLAY_SCALE = 2.0;
-const double THRESHOLD = 0.5;
-const double BETA = 1.0;
+
+
 
 void openStream(const char* file, std::ifstream& in) {
     in.open(file, std::ifstream::in);
@@ -43,8 +48,7 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
     std::ifstream in;
     // count rows and initialize matrix
     openStream(file, in);
-    std::future<int> _rows(std::async(countRows, std::ref(in)));
-    rows = _rows.get();
+    rows = countRows(in);
     std::cout << "file: " << std::setw(20) << std::left;
     std::cout << file << "\t rows: " << rows << std::endl;
     Y = cv::Mat::zeros(rows, 1, CV_64F);
@@ -76,8 +80,9 @@ void filter(const cv::Mat& X, const cv::Mat& Y, std::set<int> lables, cv::Mat& X
     }
 }
 
-void reduceFeatures(const cv::Mat& X, int features, cv::Mat& X_reduced) {
-    int reduced_rows = sqrt(features);
+// MARK: - for call to this function, must also change the `IN_SIZE` in `cost.h`
+void reduceFeatures(const cv::Mat& X, int reduced_feature, cv::Mat& X_reduced) {
+    int reduced_rows = sqrt(reduced_feature);
     int original_rows = sqrt(NUM_FEATURE);
     cv::Mat temp = cv::Mat::zeros(reduced_rows,reduced_rows, CV_64F);
     cv::Mat original = cv::Mat::zeros(original_rows,original_rows, CV_64F);
@@ -103,9 +108,9 @@ void displayImage(cv::Mat& image, double scale, std::string windowName) {
     }
 }
 
-void display_nxm_random_samples_image(const cv::Mat& model, int nHeight, int mWidth ) {
+void display_nxm_random_samples_image(const cv::Mat& model, int nHeight, int mWidth, int num_of_features = NUM_FEATURE) {
     std::vector<int> randomRowsOfModel;
-    int sampleDim = sqrt(NUM_FEATURE);
+    int sampleDim = sqrt(num_of_features);
     cv::RNG randomGenerator;
     for (int i = 0; i < (nHeight * mWidth); i++) {
         randomRowsOfModel.push_back(randomGenerator.uniform(0, model.rows));

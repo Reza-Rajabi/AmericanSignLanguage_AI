@@ -25,11 +25,12 @@ const int BATCH_SIZE = 10000;
 
 void batch(const cv::Mat& depot, cv::Mat& sub, std::vector<int>& index) {
     int m = depot.rows;
-    if (index.size() == 0)
+    if (index.empty()) {
         for (int i = 0; i < m; i++) {
             index.push_back(i);
             cv::randShuffle(index);
         }
+    }
     for (int r = 0; r < BATCH_SIZE; r++)
         sub.push_back(depot.row(index[r]));
 }

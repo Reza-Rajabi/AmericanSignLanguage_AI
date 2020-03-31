@@ -16,16 +16,16 @@
 const int NUM_LABLE = 24;
 
 const int IN_SIZE = NUM_FEATURE;    /// n
-const int HIDEN1_SIZE = 28;         /// s1
-const int HIDEN2_SIZE = 28;         /// s2
-const int HIDEN3_SIZE = 28;         /// s3
+const int HIDEN1_SIZE = 256;        /// s1
+//const int HIDEN2_SIZE = 28;         /// s2
+//const int HIDEN3_SIZE = 256;        /// s3
 const int OUT_SIZE = NUM_LABLE;     /// k
 
-const int NUM_LAYER = 5;
+const int NUM_LAYER = 3;
 const double LAMBDA = 2.0;      /// the regularization factor value to prevent overfitting
 const double EPSILON = 0.2;     /// the random initialization of the weights parameter
 
-const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, HIDEN2_SIZE, HIDEN3_SIZE, OUT_SIZE }; ///layers size
+const int S[NUM_LAYER] = { IN_SIZE, HIDEN1_SIZE, /*HIDEN2_SIZE, HIDEN3_SIZE,*/ OUT_SIZE }; ///layers size
 
 
 
@@ -60,8 +60,8 @@ cv::Mat swishPrime(const cv::Mat& Z) {
 }
 
 struct Activation { /// an structure to have choices for activation function
-    cv::Mat (*f) (const cv::Mat&) = sigmoid;
-    cv::Mat (*fPrime) (const cv::Mat&) = sigmoidPrime;
+    cv::Mat (*f) (const cv::Mat&) = swish;
+    cv::Mat (*fPrime) (const cv::Mat&) = swishPrime;
 } AC;
 
 cv::Mat log(const cv::Mat& M) {
@@ -148,11 +148,11 @@ void costFunction(Activation A,             /// activation function structure
     
     
     // MARK: - feeding forward and calculating activation parameters
-    /// X                  --> m x n                                                  a0 --> m x (n+1)
-    /// a0 * Theta0' --> ( m x  (n+1) )  * (  (n+1) x s1 )            a1 --> m x (s1+1)
-    /// a1 * Theta1' --> ( m x (s1+1) ) * ( (s1+1) x s2 )            a2 --> m x (s2+1)
-    /// a2 * Theta2' --> ( m x (s2+1) ) * ( (s2+1) x s3 )            a3 --> m x (s3+1)
-    /// a3 * Theta3' --> ( m x (s3+1) ) * ( (s3+1) x  k  )            a4 --> m x  k              hypothesis
+    /// X            --> m x n                                   a0 --> m x (n+1)
+    /// a0 * Theta0' --> ( m x  (n+1) )  * (  (n+1) x s1 )       a1 --> m x (s1+1)
+    /// a1 * Theta1' --> ( m x (s1+1) ) * ( (s1+1) x s2 )        a2 --> m x (s2+1)
+    /// a2 * Theta2' --> ( m x (s2+1) ) * ( (s2+1) x s3 )        a3 --> m x (s3+1)
+    /// a3 * Theta3' --> ( m x (s3+1) ) * ( (s3+1) x  k  )       a4 --> m x  k     hypothesis
     int m = X.rows;
     cv::Mat ones = cv::Mat::ones(m, 1, CV_64F);
     cv::Mat a[NUM_LAYER];
@@ -181,12 +181,12 @@ void costFunction(Activation A,             /// activation function structure
     for (int l = 0; l < NUM_LAYER - 1; l++) {
         Theta_[l] = Theta[l].colRange(1, Theta[l].cols);
     }
-    /// finding each error using `backpropagation`
-    /// delta4 --> delta[3] -->  m x k                                                       Thetha_g3 -->  (k x m)  * (m x s3+1)
-    /// delta3 --> delta[2] --> (m x k)  x  ( k  x s3) . (m x s3)                  Thetha_g2 --> (s3 x m) * (m x s2+1)
-    /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)                  Thetha_g1 --> (s2 x m) * (m x s1+1)
-    /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)                  Thetha_g0 --> (s1 x m) * (m x n+1)
-    /// delta0 -->  ------    -->                  ---> we ignore this
+    // finding each error using `backpropagation`
+    /// delta4 --> delta[3] -->  m x k                                 Thetha_g3 -->  (k x m)  * (m x s3+1)
+    /// delta3 --> delta[2] --> (m x k)  x  ( k  x s3) . (m x s3)      Thetha_g2 --> (s3 x m) * (m x s2+1)
+    /// delta2 --> delta[1] --> (m x s3) x (s3 x s2) . (m x s2)        Thetha_g1 --> (s2 x m) * (m x s1+1)
+    /// delta1 --> delta[0] --> (m x s2) x (s2 x s1) . (m x s1)        Thetha_g0 --> (s1 x m) * (m x n+1)
+    /// delta0 -->  ------  -->      there are no errors for the input layer
     for (int l = NUM_LAYER-2; l >= 0; l--) {
         if (l == NUM_LAYER-2)   /// delta[ i ] : 3->L5, 2->L4, 1->L3, 0->L2, and no error for L1
             delta[l] = (a[l+1] - Y_);
@@ -215,7 +215,7 @@ void costFunction(Activation A,             /// activation function structure
     unrollTheta(Theta_g, gradient);
     
     
-    // MARK: Done. J and gradient has been calculated
+    // MARK: Done. J and gradient have been calculated
 }
 
 

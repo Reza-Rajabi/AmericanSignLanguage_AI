@@ -22,14 +22,14 @@
 // Each test case may have its acceptence criteria commented
 /// -CASE 0 : off two simultanous scenarios
 /// -CASE 1 : tests loading data
-/// -CASE 2 : tests displays function                                                                ---> needs CASE 1
-/// -CASE 3 : tests train function, MOST GENERAL TEST SCENARIO          ---> needs CASE 1
-/// -CASE 4 : tests backpropagation algorithm in cost function                       ---> needs CASE 1
+/// -CASE 2 : tests displays function                                         ---> needs CASE 1
+/// -CASE 3 : tests train function, MOST GENERAL TEST SCENARIO                ---> needs CASE 1
+/// -CASE 4 : tests backpropagation algorithm in cost function                ---> needs CASE 1
 /// -CASE 5 : tests sigmoid and sigmoidPrime and log
 /// -CASE 6 : tests random initializer
 /// -CASE 7 : tests roll and unroll functions with an embeded condition
 /// -CASE 8 : tests hconcat function of opencv
-/// -CASE 9 : test lable function                                                                         ---> needs CASE 1
+/// -CASE 9 : test lable function                                             ---> needs CASE 1
 
 
 
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     cv::Mat train_Y, test_Y; /// LABLES
     cv::Mat train_X, test_X; /// FEATURES
     
-    // NOTE: -CASE 1 : test loading data
+    // MARK: -CASE 1 : test loading data
     if (CASE1 == 1 || CASE2 == 1) {
         if (argc < 3) {
             std::cout << "Data files names are not provided." << std::endl;
@@ -53,13 +53,15 @@ int main(int argc, char* argv[]) {
     }
         
         
-    // NOTE: -CASE 2 : tests displays function
+    // MARK: -CASE 2 : tests displays function
     if (CASE1 == 2 || CASE2 == 2) {
-        display_nxm_random_samples_image(test_X, 10, 20);
+//        display_nxm_random_samples_image(test_X, 10, 20);
+        cv::Mat image = getImageFromModelRow(test_X.row(15));
+        displayImage(image, 2.0, windowName_one);
     }
         
         
-    // NOTE: -CASE 3 : tests train function
+    // MARK: -CASE 3 : tests train function
     if (CASE1 == 3 || CASE2 == 3) {
         cv::Mat Theta_roll[NUM_LAYER-1];
         for(int i = 0; i < NUM_LAYER-1; i++) {
@@ -99,7 +101,7 @@ int main(int argc, char* argv[]) {
     }
         
         
-    // NOTE: -CASE 4 : test backpropagation algorithm in cost function
+    // MARK: -CASE 4 : test backpropagation algorithm in cost function
     if (CASE1 == 4 || CASE2 == 4) {
         double eps = 1e-4, J_plus, J_minus;
         const int ROWS = 100;
@@ -136,7 +138,7 @@ int main(int argc, char* argv[]) {
     /// tested in milestone2
     
     
-    // NOTE: -CASE 5 : test sigmoid and sigmoidPrime and log
+    // MARK: -CASE 5 : test sigmoid and sigmoidPrime and log
     if (CASE1 == 5 || CASE2 == 5) {
         std::vector<double> data {-1, -0.5, 0, 0.5, 1, 2};
         cv::Mat ex(data, CV_64F);
@@ -147,7 +149,7 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // NOTE: -CASE 6 : test random initializer
+    // MARK: -CASE 6 : test random initializer
     if (CASE1 == 6 || CASE2 == 6) {
         for (int i = 0; i < NUM_LAYER-1; i++) {
             cv::Mat init = initializeLayerParameters(S[i], S[i+1]);
@@ -158,7 +160,7 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // NOTE: -CASE 7 : test roll and unroll functions
+    // MARK: -CASE 7 : test roll and unroll functions
     /// this test has a conditional embeded test that needs to setup manually
     if (CASE1 == 7 || CASE2 == 7) {
         cv::Mat rolled[4];
@@ -191,7 +193,7 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // NOTE: -CASE 8 : test hconcat function of opencv
+    // MARK: -CASE 8 : test hconcat function of opencv
     if (CASE1 == 8 || CASE2 == 8) {
         double d[] {111,115,146,147,168,159};
         cv::Mat right = cv::Mat(2,3,CV_64F,d);
@@ -201,7 +203,7 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // NOTE: -CASE 9 : test lable function
+    // MARK: -CASE 9 : test lable function
     if (CASE1 == 9 || CASE2 == 9) {
         /// should get identical result if we lable the test_Y
         cv::Mat Y_;

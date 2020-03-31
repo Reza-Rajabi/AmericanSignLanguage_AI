@@ -200,8 +200,7 @@ void costFunction(Activation A,             /// activation function structure
 
     
     // MARK: - regularization of the cost and Theta_g to prevent overfitting
-    /// we add an extra cv::sum only to convert the result of expression (array of size 1) to a double
-    /// needs to set the first column (correspond to the bias of the layer) of Theta to zero (do not regularize bias)
+    /// needs to set the first column (correspond to the bias of the layer) of Theta to zero (to not regularize bias)
     for (int l = 0; l < NUM_LAYER-1; l++) {
         J += (lambda/(2.0 * m)) * cv::sum( Theta_[l].mul(Theta_[l]) )[0];
         for (int r = 0; r < Theta[l].rows; r++) {

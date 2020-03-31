@@ -45,7 +45,6 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
     openStream(file, in);
     std::future<int> _rows(std::async(countRows, std::ref(in)));
     rows = _rows.get();
-    openStream(file, in);
     std::cout << "file: " << std::setw(20) << std::left;
     std::cout << file << "\t rows: " << rows << std::endl;
     Y = cv::Mat::zeros(rows, 1, CV_64F);
@@ -65,6 +64,28 @@ void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
         }
     }
     in.close();
+}
+
+void filter(const cv::Mat& X, const cv::Mat& Y, std::set<int> lables, cv::Mat& X_filtered, cv::Mat& Y_filtered) {
+    for (int r = 0; r < Y.rows; r++) {
+        double lable = Y.at<double>(r,0);
+        if (lables.find(lable) != lables.end()) {
+            Y_filtered.at<double>(r,0) = lable;
+            X_filtered.row(r) = X.row(r).clone();
+        }
+    }
+}
+
+void reduceFeatures(const cv::Mat& X, int features, cv::Mat& X_reduced) {
+    int reduced_rows = sqrt(features);
+    int original_rows = sqrt(NUM_FEATURE);
+    cv::Mat temp = cv::Mat::zeros(reduced_rows,reduced_rows, CV_64F);
+    cv::Mat original = cv::Mat::zeros(original_rows,original_rows, CV_64F);
+    for (int r = 0; r < X.rows; r++) {
+        (X.row(r)).reshape(0,original_rows).copyTo(original);
+        cv::resize(original, temp, temp.size(), cv::INTER_AREA);
+        X_reduced.row(r) = temp.reshape(0,1).clone();
+    }
 }
 
 cv::Mat getImageFromModelRow(const cv::Mat& row) {

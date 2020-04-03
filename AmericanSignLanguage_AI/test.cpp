@@ -8,7 +8,6 @@
 
 #include <opencv2/opencv.hpp>
 #include <thread>
-
 #include "utility.h"
 #include "train.h"
 #include "predict.h"
@@ -16,7 +15,12 @@
 
 /// counter on terminal
 #define TERMINAL
+/// load what it has learned so far
+#define LOAD_PERCEPTION
+/// keep training
+//#define TRAIN
 
+/// test scenarios
 #define CASE1 1
 #define CASE2 3
 // Each test case may have its acceptence criteria commented
@@ -63,12 +67,28 @@ int main(int argc, char* argv[]) {
         
     // MARK: -CASE 3 : tests train function
     if (CASE1 == 3 || CASE2 == 3) {
+        cv::Mat Theta;
+    #ifdef LOAD_PERCEPTION
+        std::ifstream ifs;
+        openStream("learnedParams-256-iter700.csv", ifs);
+        int theta_rows = countRows(ifs);
+        Theta = cv::Mat(theta_rows, 1, CV_64F);
+        openStream("learnedParams-256-iter700.csv", ifs);
+        if (ifs.is_open()) {
+            std::string num;
+            for (int r = 0; r < theta_rows; r++) {
+                std::getline(ifs, num);
+                Theta.at<double>(r,0) = std::atof(num.c_str());
+            }
+        }
+    #else
         cv::Mat Theta_roll[NUM_LAYER-1];
         for(int i = 0; i < NUM_LAYER-1; i++) {
             Theta_roll[i] = initializeLayerParameters(S[i], S[i+1]);
         }
-        cv::Mat Theta;
         unrollTheta(Theta_roll, Theta);
+    #endif
+    #ifdef TRAIN
         cv::Mat J_history;
         cv::Mat X;
         Activation ac0;
@@ -78,7 +98,7 @@ int main(int argc, char* argv[]) {
         //train(ac0, train_X, train_Y, Theta, J_history);
         train(AC, train_X, train_Y, Theta, J_history);
         /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
-        
+    #endif
         normalize(test_X);
         cv::Mat Predict;
         predict(AC, test_X, Theta, Predict);

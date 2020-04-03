@@ -41,14 +41,14 @@ int countRows(std::ifstream& in) {
     std::string dispose;
     while(getline(in, dispose)) ++counter;
     in.close();
-    return --counter; /// dispose the title
+    return counter;
 }
 
 void loadData(const char* file, int& rows, cv::Mat& Y, cv::Mat& X) {
     std::ifstream in;
     // count rows and initialize matrix
     openStream(file, in);
-    rows = countRows(in);
+    rows = countRows(in) - 1; /// DISPOSE the first line (titles)
     std::cout << "file: " << std::setw(20) << std::left;
     std::cout << file << "\t rows: " << rows << std::endl;
     Y = cv::Mat::zeros(rows, 1, CV_64F);

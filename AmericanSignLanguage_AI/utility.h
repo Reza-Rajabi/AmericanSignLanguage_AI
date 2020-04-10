@@ -20,7 +20,7 @@ enum EXIT_CODE { ERR_ARG = 1, ERR_OPEN };
 const int NUM_FEATURE = 784; // NEVER CHANGE
 
 const double DISPLAY_SCALE = 2.0;
-const double THRESHOLD = 0.5;       /// algorithm evaluation and prediction parameter
+const double THRESHOLD = 0.3;       /// algorithm evaluation and prediction parameter
 const double BETA = 1.0;            /// algorithm evaluation parameter
 
 const std::string windowName_mxn = "m x n random samples";

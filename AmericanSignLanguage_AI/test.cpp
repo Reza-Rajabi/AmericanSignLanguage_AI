@@ -48,12 +48,13 @@ int main(int argc, char* argv[]) {
             std::cout << "Data files names are not provided." << std::endl;
             exit(ERR_ARG);
         }
-        
+        std::cout << "Loading training and test data:" << std::endl;
         std::thread setupTrain(loadData,argv[1], std::ref(train_rows), std::ref(train_Y),std::ref(train_X));
         std::thread setupTest(loadData,argv[2], std::ref(test_rows), std::ref(test_Y),std::ref(test_X));
         
         setupTrain.join();
         setupTest.join();
+        std::cout << std::endl;
     }
         
         
@@ -70,6 +71,7 @@ int main(int argc, char* argv[]) {
         cv::Mat Theta;
     #ifdef LOAD_PERCEPTION
         std::ifstream ifs;
+        std::cout << "Loading learned parameters:" << std::endl;
         openStream("learnedParams-256-iter700.csv", ifs);
         int theta_rows = countRows(ifs);
         Theta = cv::Mat(theta_rows, 1, CV_64F);
@@ -81,6 +83,8 @@ int main(int argc, char* argv[]) {
                 Theta.at<double>(r,0) = std::atof(num.c_str());
             }
         }
+        std::cout << theta_rows << " learned parameters loaded." << std::endl;
+        std::cout << std::endl;
     #else
         cv::Mat Theta_roll[NUM_LAYER-1];
         for(int i = 0; i < NUM_LAYER-1; i++) {
@@ -112,11 +116,12 @@ int main(int argc, char* argv[]) {
         double PRF[3] {0.0};
         bool works = evalFun(Predict, Y_, BETA, THRESHOLD, PRF);
         if (works)
-            std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl;
+            std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl << std::endl;
 
         cv::Mat Lable;
         lablePredict(Predict, THRESHOLD, Lable);
         cv::hconcat(test_Y, Lable, Lable);
+        std::cout << "lables, predicts" << std::endl;
         std::cout << Lable << std::endl;
     }
         

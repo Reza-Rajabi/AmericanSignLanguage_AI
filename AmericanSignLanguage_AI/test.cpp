@@ -1,5 +1,5 @@
 //
-//  tester.cpp
+//  test.cpp
 //  AmericanSignLanguage_AI
 //
 //  Created by Reza Rajabi on 2020-03-17.

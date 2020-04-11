@@ -10,8 +10,6 @@
 #define train_h
 
 #include <opencv2/core.hpp>
-#include <chrono>
-#include <ctime>
 #include <iostream>
 #include "cost.h"
 

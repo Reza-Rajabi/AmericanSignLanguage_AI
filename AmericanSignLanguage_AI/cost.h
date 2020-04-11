@@ -9,7 +9,8 @@
 #ifndef cost_h
 #define cost_h
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
+#include <iostream>
                                                         
 
 /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.

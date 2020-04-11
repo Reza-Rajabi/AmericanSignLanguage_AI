@@ -9,9 +9,10 @@
 #ifndef train_h
 #define train_h
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <chrono>
 #include <ctime>
+#include <iostream>
 #include "cost.h"
 
 /// counter on terminal

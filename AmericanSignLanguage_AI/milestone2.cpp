@@ -6,9 +6,9 @@
 //  Copyright © 2020 RR. All rights reserved.
 //
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <thread>
-
+#include <iostream>
 #include "utility.h"
 #include "cost.h"
 

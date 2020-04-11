@@ -6,8 +6,9 @@
 //  Copyright © 2020 RR. All rights reserved.
 //
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <thread>
+#include <iostream>
 #include "utility.h"
 #include "train.h"
 #include "predict.h"
@@ -34,6 +35,8 @@
 /// -CASE 7 : tests roll and unroll functions with an embeded condition
 /// -CASE 8 : tests hconcat function of opencv
 /// -CASE 9 : test lable function                                             ---> needs CASE 1
+/// -CASE 10 : test evalFun function                                             ---> needs CASE 1
+
 
 
 
@@ -60,9 +63,9 @@ int main(int argc, char* argv[]) {
         
     // MARK: -CASE 2 : tests displays function
     if (CASE1 == 2 || CASE2 == 2) {
-//        display_nxm_random_samples_image(test_X, 10, 20);
-        cv::Mat image = getImageFromModelRow(test_X.row(15));
-        displayImage(image, 2.0, windowName_one);
+        display_nxm_random_samples_image(test_X, 10, 10);
+//        cv::Mat image = getImageFromModelRow(test_X.row(15));
+//        displayImage(image, 2.0, windowName_one);
     }
         
         
@@ -159,10 +162,6 @@ int main(int argc, char* argv[]) {
     }
     
     
-    // TESTING evalFun
-    /// tested in milestone2
-    
-    
     // MARK: -CASE 5 : test sigmoid and sigmoidPrime and log
     if (CASE1 == 5 || CASE2 == 5) {
         std::vector<double> data {-1, -0.5, 0, 0.5, 1, 2};
@@ -247,6 +246,39 @@ int main(int argc, char* argv[]) {
             }
         }
         std::cout << "errors: " << countErr << std::endl;
+    }
+    
+    
+    // MARK: -CASE 10 : test evalFun function
+    if (CASE1 == 10 || CASE2 == 10) {
+        /// first: we should get 100% TP if we test test_Y against itself
+        std::cout << "\nTest lables against lables:" << std::endl;
+        /// changing test_Y to a m x NUM_LABLE matrix
+        cv::Mat Y_;
+        makeBinaryLables(test_Y, Y_);
+        
+        double PRF[3] {0.0};
+        bool works = evalFun(Y_, Y_, 1.0, 0.5, PRF);
+        if (works)
+            std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl;
+        
+        /// second: we probably shouldn't get an acceptable results for a random predict
+        /// there are no Negative value in the test data so TN will be zero, FN barely happens unless for a big thershold (ex. 0.8)
+        std::cout << "\nTest random predicts against lables:" << std::endl;
+        cv::RNG randomGenerator;
+        int m = test_Y.rows;
+        cv::Mat Rand_Predict = cv::Mat::zeros(m, NUM_LABLE, CV_64F);
+        for (int r = 0; r < m; r++) {
+            for (int c = 0; c < NUM_LABLE; c++) {
+                Rand_Predict.at<double>(r,c) = randomGenerator.uniform(0.0, 1.0);
+            }
+        }
+        /// we make a bigger thershold to have chance for FN
+        works = evalFun(Rand_Predict, Y_, 1.0, 0.8, PRF);
+        if (works)
+            std::cout << "P: " << PRF[0] << " R: " << PRF[1] << " F1: " << PRF[2] << std::endl;
+        
+        std::cout << std::endl;
     }
     
     

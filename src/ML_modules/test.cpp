@@ -17,9 +17,9 @@
 /// counter on terminal
 #define TERMINAL
 /// load what it has learned so far
-#define LOAD_PERCEPTION
+//#define LOAD_PERCEPTION
 /// keep training
-//#define TRAIN
+#define TRAIN
 
 /// test scenarios
 #define CASE1 1

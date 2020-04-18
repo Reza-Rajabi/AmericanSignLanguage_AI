@@ -9,6 +9,8 @@
 #ifndef predict_h
 #define predict_h
 
+#include "cost.h"
+
 void predict(Activation A, const cv::Mat& X, const cv::Mat& params, cv::Mat& Predict) {
     cv::Mat Theta[NUM_LAYER-1];
     rollTheta(Theta, params);

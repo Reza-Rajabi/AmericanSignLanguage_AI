@@ -11,6 +11,7 @@
 
 #include <opencv2/core.hpp>
 #include <iostream>
+#include "utility.h"
                                                         
 
 /// labeles in (0-25) mapping letter A-Z, but no lable for 9=J or 25=Z because of gesture motions.

@@ -14,7 +14,7 @@
 #include "cost.h"
 
 /// counter on terminal
-//#define TERMINAL
+#define TERMINAL
 
 const int OPT_ITERATE = 700;        /// maximum iteration for optimizer (train) function
 const double OPT_ALPHA = 0.01;      /// the alpha value of the optimizer (train) function

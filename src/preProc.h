@@ -12,16 +12,15 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 
-//#incude "ML_modules/utility.h"
 
-
-cv::Mat pre_process_image(const cv::Mat& image) {
+void pre_process_image(const cv::Mat& image, cv::Mat& sample, cv::Mat& singleRow) {
+    image.copyTo(sample);
+    cv::cvtColor(sample, sample, cv::COLOR_BGR2GRAY);
+    cv::resize(sample, sample, cv::Size(28,28)); // sample refrence is set
     cv::Mat copy;
-    image.copyTo(copy);
-    cv::cvtColor(copy, copy, cv::COLOR_BGR2GRAY);
-    cv::resize(copy, copy, cv::Size(28,28));
-    copy.convertTo(copy, CV_64F, 1.0/255.0);
-    return cv::Mat(1, 784, CV_64F, copy.data);
+    sample.copyTo(copy);
+    copy.convertTo(copy, CV_64F, 1.0); // convert to double in [0,1]
+    cv::Mat(1, 784, CV_64F, copy.data).copyTo(singleRow);
 }
     
 

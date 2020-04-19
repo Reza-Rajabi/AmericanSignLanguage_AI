@@ -21,7 +21,7 @@ enum POSITION { TOP, BOTT };
 enum VISUAL_FLOW { MANUAL, IMEDIATE, STREAM = 33, HOLD = HOLD_INTERVAL, NON = -1 };
 const VISUAL_FLOW MODE = HOLD;
 
-const char* window = "ASL.talk";
+const char window[] = "ASL.talk";
 
 
 void writeOnImage(const cv::Mat& image, const char* text, THEME t, POSITION pos) {
@@ -39,22 +39,43 @@ void writeOnImage(const cv::Mat& image, const char* text, THEME t, POSITION pos)
     cv::waitKey(HOLD);
 }
 
-void addGuide(const cv::Mat& image, cv::Mat& guide) {
-    cv::Mat copy;
-    image.copyTo(copy);
-    cv::Size size(image.cols/3, image.rows/3);
-    cv::resize(guide, guide, size);
-    for (int r = image.rows - size.height; r < image.rows; r++) {
-        for (int c = image.cols - size.width; c < image.cols; c++) {
-            cv::Vec3b& des_pixel = copy.at<cv::Vec3b>(r,c);
-            cv::Vec3b& src_pixel = guide.at<cv::Vec3b>(r - image.rows + size.height,
-                                                       c - image.cols + size.width);
+void composeUI(cv::Mat& base, cv::Mat machineView, cv::Mat guide) {
+    // attach machineView to top left
+    if (!machineView.empty()) {
+        cv::Mat copy;
+        machineView.copyTo(copy);
+        cv::Size sizeTop(base.cols/9, base.rows/9);
+        cv::resize(copy, copy, sizeTop);
+        cv::Mat copy3chanel(machineView.rows, machineView.cols, CV_8UC3);
+        cv::cvtColor(copy, copy3chanel, cv::COLOR_GRAY2BGR);
+        for (int r = 0; r < sizeTop.height; r++) {
+            for (int c = 0; c < sizeTop.width; c++) {
+                cv::Vec3b& des_pixel = base.at<cv::Vec3b>(r,c);
+                cv::Vec3b src_pixel = copy3chanel.at<cv::Vec3b>(r,c);
+                des_pixel[0] = src_pixel[0];
+                des_pixel[1] = src_pixel[1];
+                des_pixel[2] = src_pixel[2];
+            }
+        }
+    }
+    
+    // attach the guide to bottom right
+    cv::Mat copy(guide);
+    cv::Size sizeBott(base.cols/3, base.rows/3);
+    cv::resize(copy, copy, sizeBott);
+    int bott_row_start = base.rows - sizeBott.height;
+    int bott_col_start = base.cols - sizeBott.width;
+    for (int r = bott_row_start; r < base.rows; r++) {
+        for (int c = bott_col_start; c < base.cols; c++) {
+            cv::Vec3b& des_pixel = base.at<cv::Vec3b>(r,c);
+            cv::Vec3b src_pixel = copy.at<cv::Vec3b>(r - bott_row_start, c - bott_col_start);
             des_pixel[0] = src_pixel[0];
             des_pixel[1] = src_pixel[1];
             des_pixel[2] = src_pixel[2];
         }
     }
-    cv::imshow(window, copy);
+    
+    cv::imshow(window, base);
     cv::waitKey(IMEDIATE);
 }
 

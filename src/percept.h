@@ -25,8 +25,7 @@ const char learnedParams[] = "learnedParams-256-iter700.csv";
 const char trainData[] = "sign_mnist_train.csv";
 
 
-cv::Mat wakeUp(cv::Mat& background) {
-    cv::Mat Theta;
+void wakeUp(cv::Mat& background, cv::Mat& Theta) {
 #ifdef LOAD_PERCEPTION
     // load what AI has learned before
     writeOnImage(background, "Loading learned parameters...", BLACK, BOTT);
@@ -64,7 +63,6 @@ cv::Mat wakeUp(cv::Mat& background) {
     /// outputs J_history on a csv file. J_history should decrement consistantly to about zero
 #endif
     writeOnImage(background, "Ready", BLACK, BOTT);
-    return Theta;
 }
 
 #endif /* percept_h */

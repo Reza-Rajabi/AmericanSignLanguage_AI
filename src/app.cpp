@@ -2,6 +2,8 @@
 //  app.cpp
 //  AmericanSignLanguage_AI
 //
+//  Created by Reza Rajabi on 2020-04-16.
+//  Copyright © 2020 RR. All rights reserved.
 //
 
 #include <opencv2/core.hpp>
@@ -36,29 +38,35 @@ int main() {
     
     // start
     videoStream >> background;
+    background *= 0; // black;
     writeOnImage(background, "Talk ASL", COLOR, TOP);
     
-    cv::Mat Theta = wakeUp(background);
+    cv::Mat Theta;
+    wakeUp(background, Theta);
     
-    cv::Mat sample;
-    cv::Mat Predict, Lable;
+    cv::Mat sample, singleRow;
     int count = 0;
     while (true) {
         if (count == INTERVAL) count = 0;
+        
         videoStream >> background;
-        addGuide(background, guide);
+        
         if (count == INTERVAL - 1) {
-            sample = pre_process_image(background);
-            // doesn't need normalize; we only have one sample
-            predict(AC, sample, Theta, Predict);
+            pre_process_image(background, sample, singleRow);
+            composeUI(background, sample, guide);
+            singleRow = (singleRow - 127.0)/127.0; // normalize
+            cv::Mat Predict, Lable;
+            predict(AC, singleRow, Theta, Predict);
             lablePredict(Predict, THRESHOLD, Lable);
             int index = Lable.at<double>(0,0);
             if (index != -1) {
                 char lable[2] { alphabet[index], '\0' };
                 writeOnImage(background, lable, COLOR, BOTT);
             }
-            else writeOnImage(background, "Could not undrestand the sign", COLOR, TOP);
+            else writeOnImage(background, "Could not undrestand gesture", COLOR, TOP);
         }
+        else composeUI(background, sample, guide);
+
         
         count++;
         cv::waitKey(STREAM);

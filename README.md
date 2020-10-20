@@ -13,5 +13,5 @@ A random 100 examples from the dataset looks like this:
 ![](https://github.com/Reza-Rajabi/AmericanSignLanguage_AI/blob/master/dataset_example.jpg)
 
 
-And this a guide for the ASL language:
+And this is a guide for the ASL language:
 ![](https://github.com/Reza-Rajabi/AmericanSignLanguage_AI/blob/master/asl_guide.png)
